@@ -4,6 +4,13 @@ This repository documents the end-to-end setup and deployment of the **Craftism*
 
 The goal of this setup was to learn and implement a **production-grade, low-cost deployment** for a static website.
 
+Code on **Google Antigravity**
+Login and Database management on **Supabase**
+Domain Managed on **DNS Exit***
+Commit to **Github**
+Hosted on ***Google Cloud***
+
+
 ---
 
 ## 🌐 Live URLs
@@ -82,6 +89,7 @@ services:
 
 	•	Static files are mounted directly into the Nginx container.
 	•	Any change to files is reflected immediately without rebuilding images.
+
 
 🌍 Domain & DNS Configuration
 	•	Domain: craftism.run.place (free subdomain)
