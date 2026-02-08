@@ -1,7 +1,26 @@
-      - name: Setup SSH
+name: Deploy to GCP VM (PROOF)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: CI Trigger Proof
+        run: |
+          echo "CI triggered successfully"
+
+      - name: SSH Proof to VM
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.DEPLOY_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H github.com >> ~/.ssh/known_hosts
           ssh-keyscan -H 136.113.210.199 >> ~/.ssh/known_hosts
+
+          ssh shoyab_mail@136.113.210.199 << 'EOF'
+            echo "CI/CD CONNECTED AT $(date)" > /tmp/cicd_PROOF.txt
+          EOF
