@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Craftism - The Vision</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="index.html" class="logo">CRAFTISM</a>
+            <ul class="nav-links">
+                <li class="nav-item"><a href="index.html">Home</a></li>
+                <li class="nav-item"><a href="about.html" class="active">About</a></li>
+                <li class="nav-item" id="auth-item"><a href="login.html" class="btn btn-outline"
+                        style="padding: 8px 16px; font-size: 0.9rem;">Login</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero" style="min-height: 35vh;">
+        <div class="container hero-content">
+            <h1 class="hero-title">About The Craftism</h1>
+        </div>
+    </header>
+
+    <section class="container" style="padding-top: 2rem;">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--spacing-lg);">
+
+            <div class="content">
+                <h2>The Mission</h2>
+                <div style="width: 60px; height: 4px; background: var(--color-accent); margin: 10px 0 20px;"></div>
+                <p style="margin-bottom: 20px;">
+                    Craftism exists to bridge the gap between abstract creativity and structured execution.
+                    In a world overflowing with information, the ability to organize thoughts into clear,
+                    impactful formats—be it a resume, a presentation, or a piece of writing—is a superpower.
+                </p>
+                <p style="margin-bottom: 20px;">
+                    We believe that everyone deserves a blueprint for success. Our tools are designed not just to
+                    do the work for you, but to guide you through a process of refinement and professional growth.
+                </p>
+
+                <h3 style="margin-top: 40px;">Who Is This For?</h3>
+                <ul style="list-style: none; margin-top: 20px;">
+                    <li style="margin-bottom: 15px;"><i class="fa-solid fa-check"
+                            style="color: var(--color-accent); margin-right: 10px;"></i> <strong>Professionals</strong>
+                        seeking to sharpen their career assets.</li>
+                    <li style="margin-bottom: 15px;"><i class="fa-solid fa-check"
+                            style="color: var(--color-accent); margin-right: 10px;"></i> <strong>Students</strong>
+                        looking for structured learning and creation tools.</li>
+                    <li style="margin-bottom: 15px;"><i class="fa-solid fa-check"
+                            style="color: var(--color-accent); margin-right: 10px;"></i> <strong>Builders</strong> who
+                        appreciate clean, ergonomic systems.</li>
+                </ul>
+            </div>
+
+            <div class="sidebar">
+                <div class="card" style="cursor: default; background: #fff; border: 1px solid var(--color-primary);">
+                    <div style="text-align: center; margin-bottom: 1rem;">
+                        <i class="fa-solid fa-user-astronaut" style="font-size: 4rem; color: var(--color-primary);"></i>
+                    </div>
+                    <h3 style="text-align: center; font-size: 1.5rem;">The Creator</h3>
+                    <div style="width: 100%; height: 1px; background: #ddd; margin: 1rem 0;"></div>
+
+                    <div style="margin-bottom: 10px;">
+                        <strong>Name:</strong> Md Shoyab
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>Location:</strong> New Delhi, India
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>Email:</strong> <a href="mailto:md.shoyab@zohomail.com"
+                            style="color: var(--color-accent);">md.shoyab@zohomail.com</a>
+                    </div>
+
+                    <div style="margin-top: 20px; display: flex; justify-content: space-around;">
+                        <a href="#"><i class="fa-brands fa-github" style="font-size: 1.5rem;"></i></a>
+                        <a href="#"><i class="fa-brands fa-linkedin" style="font-size: 1.5rem;"></i></a>
+                        <a href="#"><i class="fa-brands fa-twitter" style="font-size: 1.5rem;"></i></a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Craftism. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>

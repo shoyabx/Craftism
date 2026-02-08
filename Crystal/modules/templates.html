@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Templates - Craftism</title>
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="../index.html" class="logo">CRAFTISM</a>
+            <ul class="nav-links">
+                <li class="nav-item"><a href="../index.html">Home</a></li>
+                <li class="nav-item"><a href="../about.html">About</a></li>
+                <li class="nav-item" id="auth-item"><a href="../login.html" class="btn btn-outline"
+                        style="padding: 8px 16px; font-size: 0.9rem;">Login</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container" style="padding-top: 150px; text-align: center;">
+        <h1>Templates</h1>
+        <p>Dance on the beat of a magician.</p>
+        <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-top: 2rem;">
+            <!-- Placeholders for templates -->
+            <div style="background: #fff; padding: 1rem; border-radius: 8px; box-shadow: var(--shadow-sm);">
+                <div style="height: 200px; background: #eee; margin-bottom: 1rem;"></div>
+                <h3>Modern</h3>
+            </div>
+            <div style="background: #fff; padding: 1rem; border-radius: 8px; box-shadow: var(--shadow-sm);">
+                <div style="height: 200px; background: #eee; margin-bottom: 1rem;"></div>
+                <h3>Classic</h3>
+            </div>
+            <div style="background: #fff; padding: 1rem; border-radius: 8px; box-shadow: var(--shadow-sm);">
+                <div style="height: 200px; background: #eee; margin-bottom: 1rem;"></div>
+                <h3>Creative</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/auth.js"></script>
+</body>
+
+</html>

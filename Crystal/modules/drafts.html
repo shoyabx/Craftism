@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Drafts - Craftism</title>
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="../index.html" class="logo">CRAFTISM</a>
+            <ul class="nav-links">
+                <li class="nav-item"><a href="../index.html">Home</a></li>
+                <li class="nav-item"><a href="../about.html">About</a></li>
+                <li class="nav-item" id="auth-item"><a href="../login.html" class="btn btn-outline"
+                        style="padding: 8px 16px; font-size: 0.9rem;">Login</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container" style="padding-top: 150px; min-height: 80vh;">
+        <h1>Drafts</h1>
+        <p>Look back on your past sins.</p>
+        <div id="drafts-container" style="margin-top: 2rem;">
+            <!-- Drafts will be loaded here -->
+        </div>
+    </div>
+
+    <style>
+        .drafts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .draft-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .draft-card:hover {
+            border-color: #F66B0E;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .draft-card.auto-save {
+            background: #fef3c7;
+            border-color: #fbbf24;
+        }
+
+        .draft-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .draft-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #112B3C;
+            margin: 0;
+        }
+
+        .draft-date {
+            font-size: 0.85rem;
+            color: #6B7280;
+            margin-top: 0.5rem;
+        }
+
+        .draft-preview {
+            font-size: 0.9rem;
+            color: #4B5563;
+            margin-top: 0.75rem;
+            max-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .draft-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .draft-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .draft-btn-load {
+            background: #10b981;
+            color: white;
+            flex: 1;
+        }
+
+        .draft-btn-load:hover {
+            background: #059669;
+        }
+
+        .draft-btn-delete {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .draft-btn-delete:hover {
+            background: #fecaca;
+        }
+
+        .no-drafts {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+
+    <script>
+        const DRAFTS_KEY = 'craftism-resume-drafts';
+
+        // Get all drafts from localStorage
+        function getAllDrafts() {
+            const draftsJson = localStorage.getItem(DRAFTS_KEY);
+            return draftsJson ? JSON.parse(draftsJson) : [];
+        }
+
+        // Save all drafts to localStorage
+        function saveAllDrafts(drafts) {
+            localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+        }
+
+        // Delete a draft
+        function deleteDraft(index, event) {
+            // Stop event propagation to prevent any bubbling
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+
+            const drafts = getAllDrafts();
+            const draftName = drafts[index].name;
+
+            // Use a more reliable confirmation
+            const confirmed = window.confirm(`Delete draft "${draftName}"?\n\nThis action cannot be undone.`);
+
+            if (confirmed) {
+                drafts.splice(index, 1);
+                saveAllDrafts(drafts);
+                // Reload the drafts display
+                loadDrafts();
+            }
+        }
+
+        // Load a draft (redirect to createresume.html with draft ID)
+        function loadDraft(draftId) {
+            window.location.href = `createresume.html?draftId=${draftId}`;
+        }
+
+        // Get text preview from HTML content
+        function getTextPreview(html, maxLength = 100) {
+            const div = document.createElement('div');
+            div.innerHTML = html;
+            const text = div.textContent || div.innerText || '';
+            return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+        }
+
+        // Load and display all drafts
+        function loadDrafts() {
+            const drafts = getAllDrafts();
+            const container = document.getElementById('drafts-container');
+
+            if (drafts.length === 0) {
+                container.innerHTML = '<div class="no-drafts">No drafts saved yet. Start creating!</div>';
+                return;
+            }
+
+            const grid = document.createElement('div');
+            grid.className = 'drafts-grid';
+
+            drafts.forEach((draft, index) => {
+                const card = document.createElement('div');
+                card.className = 'draft-card' + (draft.name === '[Auto-Save]' ? ' auto-save' : '');
+
+                const preview = getTextPreview(draft.content);
+
+                card.innerHTML = `
+                    <div class="draft-card-header">
+                        <div>
+                            <h3 class="draft-name">${draft.name}</h3>
+                            <div class="draft-date">
+                                <i class="fa-solid fa-clock"></i> ${draft.lastModified}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="draft-preview">${preview}</div>
+                    <div class="draft-actions">
+                        <button class="draft-btn draft-btn-load" onclick="loadDraft(${draft.id})">
+                            <i class="fa-solid fa-folder-open"></i> Load
+                        </button>
+                        <button class="draft-btn draft-btn-delete" onclick="deleteDraft(${index}, event)">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+
+            container.innerHTML = '';
+            container.appendChild(grid);
+        }
+
+        // Load drafts on page load
+        document.addEventListener('DOMContentLoaded', loadDrafts);
+    </script>
+
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/auth.js"></script>
+</body>
+
+</html>

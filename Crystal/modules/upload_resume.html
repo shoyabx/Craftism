@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export / Upload Resume - Craftism</title>
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Mammoth.js for DOCX to HTML conversion -->
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="../index.html" class="logo">CRAFTISM</a>
+            <ul class="nav-links">
+                <li class="nav-item"><a href="../index.html">Home</a></li>
+                <li class="nav-item"><a href="../about.html">About</a></li>
+                <li class="nav-item" id="auth-item"><a href="../login.html" class="btn btn-outline"
+                        style="padding: 8px 16px; font-size: 0.9rem;">Login</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container" style="padding-top: 150px; text-align: center;">
+        <h1>Export / Upload</h1>
+        <p>Let your formula and our spell do the magic.</p>
+
+        <div id="drop-zone"
+            style="margin-top: 2rem; padding: 3rem; border: 3px dashed #ccc; border-radius: 12px; transition: all 0.3s ease; background: #f9fafb;">
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 4rem; color: #9ca3af; margin-bottom: 1rem;"></i>
+            <p style="margin-top: 1rem; font-size: 1.1rem; color: #4b5563;">Drag and drop your resume here</p>
+            <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 1.5rem;">or</p>
+
+            <input type="file" id="file-input" accept=".txt,.pdf,.docx,.doc" style="display: none;">
+            <button class="btn btn-primary" id="upload-btn" style="margin-top: 0;">
+                <i class="fa-solid fa-file-arrow-up"></i> Choose File
+            </button>
+
+            <p style="margin-top: 1.5rem; font-size: 0.85rem; color: #9ca3af;">
+                Supported formats: <strong>TXT, DOCX, DOC</strong> (PDF coming soon)
+            </p>
+        </div>
+
+        <div id="file-info" style="margin-top: 2rem; display: none;">
+            <div
+                style="background: #f0fdf4; border: 2px solid #86efac; border-radius: 8px; padding: 1rem; display: inline-block;">
+                <i class="fa-solid fa-file-check" style="color: #16a34a; margin-right: 0.5rem;"></i>
+                <span id="file-name" style="color: #15803d; font-weight: bold;"></span>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #drop-zone.drag-over {
+            border-color: #F66B0E;
+            background: #fff7ed;
+            transform: scale(1.02);
+        }
+
+        #drop-zone.uploading {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+    </style>
+
+    <script src="../js/modules/upload_handler.js"></script>
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const uploadBtn = document.getElementById('upload-btn');
+        const fileInfo = document.getElementById('file-info');
+        const fileName = document.getElementById('file-name');
+
+        // Click to upload
+        uploadBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // File selected
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                displayFileInfo(file);
+                handleFileUpload(file);
+            }
+        });
+
+        // Drag and drop events
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                displayFileInfo(file);
+                handleFileUpload(file);
+            }
+        });
+
+        // Display file info
+        function displayFileInfo(file) {
+            fileName.textContent = file.name;
+            fileInfo.style.display = 'block';
+            dropZone.classList.add('uploading');
+        }
+    </script>
+
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/auth.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Craftism</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body
+    style="background: var(--color-primary); display: flex; align-items: center; justify-content: center; min-height: 100vh;">
+
+    <div class="card" style="width: 100%; max-width: 400px; padding: 3rem; cursor: default;">
+        <h2 style="text-align: center; margin-bottom: 2rem; color: var(--color-primary);">Login</h2>
+
+        <form id="login-form">
+            <div style="margin-bottom: 1.5rem;">
+                <label for="email" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Email</label>
+                <input type="email" id="email" required
+                    style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 4px; font-family: var(--font-body);">
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <label for="password" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Password</label>
+                <input type="password" id="password" required
+                    style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 4px; font-family: var(--font-body);">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+        </form>
+
+        <p style="text-align: center; margin-top: 1.5rem;">
+            No account? <a href="register.html" style="color: var(--color-accent); font-weight: bold;">Register</a>
+        </p>
+        <p style="text-align: center; margin-top: 1rem;">
+            <a href="index.html" style="color: #888; font-size: 0.9rem;">&larr; Back to Home</a>
+        </p>
+
+        <div id="error-msg" style="color: red; text-align: center; margin-top: 1rem; display: none;"></div>
+    </div>
+
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('error-msg');
+
+            if (!supabaseClient) initSupabase();
+
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password,
+                });
+
+                if (error) throw error;
+
+                // Login successful - redirect to referrer or profile
+                const redirectUrl = getLoginRedirectUrl();
+                window.location.href = redirectUrl;
+
+            } catch (error) {
+                errorMsg.textContent = error.message;
+                errorMsg.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+
+</html>

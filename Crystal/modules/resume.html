@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Creator - Craftism</title>
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="../index.html" class="logo">CRAFTISM</a>
+            <ul class="nav-links">
+                <li class="nav-item"><a href="../index.html">Home</a></li>
+                <li class="nav-item"><a href="../about.html">About</a></li>
+                <li class="nav-item" id="auth-item"><a href="../login.html" class="btn btn-outline"
+                        style="padding: 8px 16px; font-size: 0.9rem;">Login</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container"
+        style="padding-top: 120px; min-height: 80vh; display: flex; flex-direction: column; justify-content: center;">
+
+        <div class="section-header" style="text-align: center; margin-bottom: 3rem;">
+            <h2>LET'S ROLL <i class="ph ph-dice-six"></i></h2>
+            <div style="width: 60px; height: 4px; background: var(--color-accent); margin: 10px auto;"></div>
+        </div>
+
+        <div class="features-grid">
+
+            <!-- Card 1: Start from Scratch -->
+            <div class="card" onclick="window.location.href='createresume.html'"
+                style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <i class="ph ph-pencil-simple card-icon"></i>
+                    <h3 class="card-title">Start from Scratch</h3>
+                    <p>Ready to craft your professional journey?</p>
+                </div>
+            </div>
+
+            <!-- Card 2: Export -->
+            <div class="card" onclick="window.location.href='upload_resume.html'"
+                style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <i class="ph ph-export card-icon"></i>
+                    <h3 class="card-title">Export</h3>
+                    <p>Let your formula and our spell do the magic.</p>
+                </div>
+            </div>
+
+            <!-- Card 3: Templates -->
+            <div class="card" onclick="window.location.href='templates.html'"
+                style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <i class="ph ph-magic-wand card-icon"></i>
+                    <h3 class="card-title">Templates</h3>
+                    <p>Dance on the beat of a magician.</p>
+                </div>
+            </div>
+
+            <!-- Card 4: Draft -->
+            <div class="card" onclick="window.location.href='drafts.html'"
+                style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <i class="ph ph-pencil card-icon"></i>
+                    <h3 class="card-title">Draft</h3>
+                    <p>Look back on your past sins.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <h3>CRAFTISM</h3>
+            <p>&copy; 2025 Craftism. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#"><i class="ph ph-twitter-logo"></i></a>
+                <a href="#"><i class="ph ph-linkedin-logo"></i></a>
+                <a href="#"><i class="ph ph-github-logo"></i></a>
+                <a href="mailto:md.shoyab@zohomail.com"><i class="ph ph-envelope"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  web:
+    image: nginx:alpine
+    container_name: craftism-web
+    ports:
+      - "80:80"
+    volumes:
+      - ./Crystal:/usr/share/nginx/html:ro
+    restart: always
