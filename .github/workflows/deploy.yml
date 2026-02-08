@@ -1,31 +1,7 @@
-name: Deploy to GCP VM
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H github.com >> ~/.ssh/known_hosts
           ssh-keyscan -H 136.113.210.199 >> ~/.ssh/known_hosts
-
-      - name: Deploy to VM
-        run: |
-          ssh shoyab_mail@136.113.210.199 << 'EOF'
-            set -e
-            cd ~/craftism/Craftism
-            git pull origin main
-            docker compose restart
-          EOF
