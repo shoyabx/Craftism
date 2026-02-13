@@ -8,7 +8,7 @@ import sys
 SUPABASE_URL = os.environ.get("https://oesyuyxahvudrdjkeyyh.supabase.co")
 SUPABASE_API_KEY = os.environ.get("sb_publishable_UGAMF3ae5nGhhme_gq85pw_b27qgacp")
 
-if not SUPABASE_URL or not SUPABASE_API_KEY:
+if not https://oesyuyxahvudrdjkeyyh.supabase.co or not sb_publishable_UGAMF3ae5nGhhme_gq85pw_b27qgacp:
     print("Error: SUPABASE_URL and SUPABASE_API_KEY environment variables must be set")
     sys.exit(1)
 
