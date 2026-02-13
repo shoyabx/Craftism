@@ -5,13 +5,13 @@ import os
 import json
 import sys
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_API_KEY = os.environ.get("SUPABASE_API_KEY")
+SUPABASE_URL = os.environ.get("https://oesyuyxahvudrdjkeyyh.supabase.co")
+SUPABASE_API_KEY = os.environ.get("sb_publishable_UGAMF3ae5nGhhme_gq85pw_b27qgacp")
 
 def random_string(length=10):
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
 
-email = f"{random_string()}@example.com"
+email = f"{random_string()}@tesing.com"
 password = random_string(14)
 
 headers = {
