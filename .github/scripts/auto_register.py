@@ -1,3 +1,4 @@
+print("Running script version 3")
 import requests
 import random
 import string
