@@ -16,6 +16,7 @@ password = random_string(14)
 
 headers = {
     "apikey": SUPABASE_API_KEY,
+    "Authorization": f"Bearer {SUPABASE_API_KEY}",
     "Content-Type": "application/json"
 }
 
