@@ -5,10 +5,10 @@ import os
 import json
 import sys
 
-SUPABASE_URL = os.environ.get("https://oesyuyxahvudrdjkeyyh.supabase.co")
-SUPABASE_API_KEY = os.environ.get("sb_publishable_UGAMF3ae5nGhhme_gq85pw_b27qgacp")
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_API_KEY = os.environ.get("SUPABASE_API_KEY")
 
-if not https://oesyuyxahvudrdjkeyyh.supabase.co or not sb_publishable_UGAMF3ae5nGhhme_gq85pw_b27qgacp:
+if not SUPABASE_URL or not SUPABASE_API_KEY:
     print("Error: SUPABASE_URL and SUPABASE_API_KEY environment variables must be set")
     sys.exit(1)
 
@@ -20,10 +20,9 @@ email = f"{random_string()}@tesing.com"
 password = random_string(14)
 
 headers = {
-    "apikey": sb_publishable_UGAMF3ae5nGhhme_gq85pw_b27qgacp,
-    "Authorization": f"Bearer {sb_publishable_UGAMF3ae5nGhhme_gq85pw_b27qgacp}",
+    "apikey": SUPABASE_API_KEY,
+    "Authorization": f"Bearer {SUPABASE_API_KEY}",
     "Content-Type": "application/json"
-
 }
 
 payload = {
