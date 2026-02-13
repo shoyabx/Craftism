@@ -18,6 +18,7 @@ headers = {
     "apikey": sb_publishable_UGAMF3ae5nGhhme_gq85pw_b27qgacp,
     "Authorization": f"Bearer {sb_publishable_UGAMF3ae5nGhhme_gq85pw_b27qgacp}",
     "Content-Type": "application/json"
+
 }
 
 payload = {
