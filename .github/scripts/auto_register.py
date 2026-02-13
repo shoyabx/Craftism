@@ -23,10 +23,12 @@ password = random_string(14)
 headers = {
     "apikey": SUPABASE_API_KEY,
     "Authorization": f"Bearer {SUPABASE_API_KEY}",
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
+    "Prefer": "return=minimal"
 }
 
 payload = {
+    "username": random_string(),
     "email": email,
     "password": password
 }
