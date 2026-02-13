@@ -15,8 +15,8 @@ email = f"{random_string()}@example.com"
 password = random_string(14)
 
 headers = {
-    "apikey": SUPABASE_API_KEY,
-    "Authorization": f"Bearer {SUPABASE_API_KEY}",
+    "apikey": sb_publishable_UGAMF3ae5nGhhme_gq85pw_b27qgacp,
+    "Authorization": f"Bearer {sb_publishable_UGAMF3ae5nGhhme_gq85pw_b27qgacp}",
     "Content-Type": "application/json"
 }
 
