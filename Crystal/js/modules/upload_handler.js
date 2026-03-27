@@ -1,21 +1,15 @@
 // ══════════════════════════════════════════════════════
-// UPLOAD HANDLER — File intake for PDF/DOCX/TXT
-// Redirects parsed content to templates.html
+// UPLOAD HANDLER — PDF/DOCX/TXT → localStorage → redirect
 // ══════════════════════════════════════════════════════
 
 var UPLOAD_CONTENT_KEY = 'craftism-uploaded-content';
 var UPLOAD_FORMAT_KEY  = 'craftism-uploaded-format';
 
-/**
- * Handle file upload — extract content, store, redirect
- */
 async function handleFileUpload(file) {
     if (!file) { alert('Please select a file.'); return; }
-
     var fileName = file.name.toLowerCase();
     if (!fileName.endsWith('.pdf') && !fileName.endsWith('.docx') && !fileName.endsWith('.doc') && !fileName.endsWith('.txt')) {
-        alert('Please upload a PDF, DOCX, or TXT file.');
-        return;
+        alert('Please upload a PDF, DOCX, or TXT file.'); return;
     }
 
     try {
@@ -25,47 +19,33 @@ async function handleFileUpload(file) {
         if (fileName.endsWith('.txt')) {
             content = await readTextFile(file);
             format = 'text';
+
         } else if (fileName.endsWith('.pdf')) {
-            // Use pdf.js if loaded
-            if (typeof pdfjsLib !== 'undefined') {
-                content = await extractPDFText(file);
-                format = 'text';
-            } else {
-                alert('PDF parsing requires pdf.js library. Please use DOCX or TXT for now.');
-                return;
-            }
+            content = await extractPDFText(file);
+            format = 'text';
+
         } else if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) {
-            if (typeof mammoth === 'undefined') {
-                alert('DOCX parsing requires mammoth.js library.');
-                return;
-            }
-            var arrayBuffer = await readFileAsArrayBuffer(file);
-            var options = {
-                arrayBuffer: arrayBuffer,
+            if (typeof mammoth === 'undefined') { alert('DOCX library not loaded.'); return; }
+            var buf = await readFileAsArrayBuffer(file);
+            var result = await mammoth.convertToHtml({
+                arrayBuffer: buf,
                 styleMap: [
                     "p[style-name='Heading 1'] => h1:fresh",
                     "p[style-name='Heading 2'] => h2:fresh",
                     "p[style-name='Heading 3'] => h3:fresh",
                     "p[style-name='Title'] => h1.title:fresh",
-                    "p[style-name='Subtitle'] => h2.subtitle:fresh",
                     "p[style-name='Normal'] => p:fresh"
                 ],
                 includeDefaultStyleMap: true,
-            };
-            var result = await mammoth.convertToHtml(options);
+            });
             content = result.value;
             format = 'html';
-            console.log('DOCX messages:', result.messages);
         }
 
         if (content && content.trim()) {
             localStorage.setItem(UPLOAD_CONTENT_KEY, content);
             localStorage.setItem(UPLOAD_FORMAT_KEY, format);
-            console.log('Stored upload (' + format + '):', content.substring(0, 200) + '...');
-
-            setTimeout(function() {
-                window.location.href = 'templates.html?upload=true';
-            }, 100);
+            setTimeout(function() { window.location.href = 'templates.html?upload=true'; }, 100);
         } else {
             alert('No content found in the file.');
         }
@@ -75,25 +55,36 @@ async function handleFileUpload(file) {
     }
 }
 
-/**
- * Extract text from PDF using pdf.js
- */
+// ── PDF Text Extraction via pdf.js ──────────────────
 async function extractPDFText(file) {
+    if (typeof pdfjsLib === 'undefined') {
+        throw new Error('PDF.js library not loaded. Please refresh and try again.');
+    }
     var arrayBuffer = await readFileAsArrayBuffer(file);
     var pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
     var allText = '';
 
     for (var i = 1; i <= pdf.numPages; i++) {
         var page = await pdf.getPage(i);
-        var content = await page.getTextContent();
-        var pageText = content.items.map(function(item) {
-            return item.str;
-        }).join(' ');
+        var textContent = await page.getTextContent();
+        var lastY = null;
+        var pageText = '';
+
+        // Preserve line breaks by detecting Y-position changes
+        textContent.items.forEach(function(item) {
+            if (lastY !== null && Math.abs(item.transform[5] - lastY) > 2) {
+                pageText += '\n';
+            }
+            pageText += item.str;
+            lastY = item.transform[5];
+        });
+
         allText += pageText + '\n\n';
     }
     return allText;
 }
 
+// ── File readers ────────────────────────────────────
 function readFileAsArrayBuffer(file) {
     return new Promise(function(resolve, reject) {
         var reader = new FileReader();
@@ -112,9 +103,7 @@ function readTextFile(file) {
     });
 }
 
-/**
- * Retrieve uploaded content (called by templates.js)
- */
+// ── Retrieve stored upload (called by templates.js) ─
 function getUploadedContent() {
     var content = localStorage.getItem(UPLOAD_CONTENT_KEY);
     var format = localStorage.getItem(UPLOAD_FORMAT_KEY) || 'text';
