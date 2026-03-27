@@ -4,49 +4,896 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resume Templates - Craftism</title>
+    <title>Resume Templates — Craftism</title>
+    <meta name="description" content="Build a professional resume with live preview, multiple layouts, and full customization.">
+
+    <!-- Google Fonts: 5 professional resume fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&family=Merriweather:wght@300;400;700&family=Playfair+Display:wght@400;600;700&family=Source+Serif+4:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+
+    <!-- Project styles -->
     <link rel="stylesheet" href="../css/style.css">
+
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* ═══════════════════════════════════════════
+           APP SHELL
+        ═══════════════════════════════════════════ */
+        :root {
+            --panel-bg:   #ffffff;
+            --app-bg:     #f0f2f5;
+            --border:     #e2e8f0;
+            --muted:      #64748b;
+            --accent:     #F66B0E;
+            --accent-lt:  #fff4ed;
+
+            /* Resume CSS variables — controlled by JS */
+            --r-primary:  #1a3c5e;
+            --r-text:     #1e293b;
+            --r-muted:    #64748b;
+            --r-font:     'Inter', sans-serif;
+            --r-base:     13px;
+            --r-gap:      16px;
+            --r-sgap:     22px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--app-bg);
+            overflow-x: hidden;
+        }
+
+        /* ── App layout ── */
+        .builder-shell {
+            display: grid;
+            grid-template-columns: 290px 1fr;
+            height: calc(100vh - 64px);
+            margin-top: 64px;
+        }
+
+        /* ═══════════════════════════════════════════
+           CONTROLS PANEL
+        ═══════════════════════════════════════════ */
+        .ctrl-panel {
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ctrl-head {
+            position: sticky;
+            top: 0;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border);
+            padding: 12px 18px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            z-index: 10;
+        }
+
+        .ctrl-group {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .ctrl-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--muted);
+            margin-bottom: 9px;
+        }
+
+        /* Layout buttons */
+        .layout-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; }
+
+        .lay-btn {
+            border: 2px solid var(--border);
+            background: #f8fafc;
+            border-radius: 7px;
+            padding: 8px 4px 6px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: var(--muted);
+            transition: all 0.15s;
+        }
+        .lay-btn:hover  { border-color: var(--accent); background: var(--accent-lt); }
+        .lay-btn.active { border-color: var(--accent); background: var(--accent-lt); color: var(--accent); }
+
+        .lay-icon { display: flex; gap: 2px; width: 28px; height: 20px; }
+        .lay-icon .b { background: #cbd5e1; border-radius: 2px; height: 100%; }
+        .lay-btn.active .lay-icon .b { background: var(--accent); }
+        .lay-icon.s1 .b { flex: 1; }
+        .lay-icon.s2 .b:first-child { flex: 0.38; }
+        .lay-icon.s2 .b:last-child  { flex: 0.62; }
+        .lay-icon.s3 .b { flex: 1; height: 55%; margin-top: auto; }
+
+        /* Font options */
+        .font-list { display: flex; flex-direction: column; gap: 3px; }
+        .font-opt {
+            padding: 6px 10px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.84rem;
+            cursor: pointer;
+            transition: all 0.12s;
+            background: white;
+        }
+        .font-opt:hover  { border-color: var(--accent); }
+        .font-opt.active { border-color: var(--accent); background: var(--accent-lt); }
+
+        /* Toggle strip */
+        .tog-strip {
+            display: flex;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            overflow: hidden;
+        }
+        .tog {
+            flex: 1;
+            padding: 6px 4px;
+            border: none;
+            background: white;
+            cursor: pointer;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--muted);
+            border-right: 1px solid var(--border);
+            transition: all 0.12s;
+        }
+        .tog:last-child { border-right: none; }
+        .tog:hover  { background: #f8fafc; }
+        .tog.active { background: var(--accent); color: white; }
+
+        /* Color swatches */
+        .swatches { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 8px; }
+        .swatch {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+        .swatch.active { border-color: #1e293b; transform: scale(1.2); }
+        .custom-color-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .custom-color-row label { font-size: 0.72rem; color: var(--muted); }
+        .custom-color-row input[type=color] {
+            width: 30px; height: 30px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            padding: 1px;
+        }
+
+        /* Section manager */
+        .sec-list { display: flex; flex-direction: column; gap: 3px; }
+        .sec-row {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: white;
+            font-size: 0.78rem;
+        }
+        .sec-row input[type=checkbox] { cursor: pointer; accent-color: var(--accent); flex-shrink: 0; }
+        .sec-row .sec-name { flex: 1; font-weight: 500; color: #334155; }
+        .sec-row.off .sec-name { color: #94a3b8; }
+        .sec-arrows { display: flex; gap: 2px; }
+        .arr-btn {
+            border: none;
+            background: #f1f5f9;
+            border-radius: 4px;
+            padding: 2px 6px;
+            cursor: pointer;
+            font-size: 0.68rem;
+            color: #475569;
+            line-height: 1.5;
+            transition: all 0.12s;
+        }
+        .arr-btn:hover    { background: var(--accent); color: white; }
+        .arr-btn:disabled { opacity: 0.28; pointer-events: none; }
+
+        /* Download button */
+        .dl-btn {
+            width: 100%;
+            padding: 10px;
+            background: #112B3C;
+            color: white;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.18s;
+        }
+        .dl-btn:hover { background: #0f1f2b; transform: translateY(-1px); }
+
+        /* ═══════════════════════════════════════════
+           PREVIEW PANEL
+        ═══════════════════════════════════════════ */
+        .preview-panel {
+            overflow-y: auto;
+            padding: 28px 24px;
+            background: var(--app-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* ═══════════════════════════════════════════
+           RESUME PAPER
+        ═══════════════════════════════════════════ */
+        .resume-paper {
+            width: 750px;
+            background: white;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04);
+            border-radius: 2px;
+            font-family: var(--r-font);
+            font-size: var(--r-base);
+            color: var(--r-text);
+            line-height: 1.5;
+            overflow: hidden;
+        }
+
+        /* ── Density scales ── */
+        .dn-compact    { --r-gap: 10px; --r-sgap: 14px; }
+        .dn-standard   { --r-gap: 16px; --r-sgap: 22px; }
+        .dn-airy       { --r-gap: 22px; --r-sgap: 30px; }
+
+        /* ── Font size scales ── */
+        .fs-sm { --r-base: 11px; }
+        .fs-md { --r-base: 13px; }
+        .fs-lg { --r-base: 15px; }
+
+        /* ════════════════════
+           LAYOUT A — Single
+        ════════════════════ */
+        .lay-single { padding: var(--r-gap) calc(var(--r-gap) * 2); }
+
+        .lay-single .r-header {
+            text-align: center;
+            padding-bottom: var(--r-gap);
+            border-bottom: 2.5px solid var(--r-primary);
+            margin-bottom: var(--r-sgap);
+        }
+
+        .lay-single .r-contact-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 3px 14px;
+            margin-top: 7px;
+        }
+
+        /* ════════════════════
+           LAYOUT B — Two Col
+        ════════════════════ */
+        .lay-two {
+            display: grid;
+            grid-template-columns: 210px 1fr;
+            min-height: 900px;
+        }
+
+        .lay-two .r-sidebar {
+            background: var(--r-primary);
+            color: white;
+            padding: calc(var(--r-gap) * 1.4);
+        }
+
+        .lay-two .r-sidebar .r-name    { color: white; }
+        .lay-two .r-sidebar .r-title   { color: rgba(255,255,255,0.75); }
+        .lay-two .r-sidebar .r-contact { color: rgba(255,255,255,0.8); font-size: 0.82em; margin-top: 10px; display: flex; flex-direction: column; gap: 3px; }
+        .lay-two .r-sidebar .sec-title { color: rgba(255,255,255,0.95); border-bottom-color: rgba(255,255,255,0.25); }
+        .lay-two .r-sidebar .skill-tag { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.2); color: white; }
+        .lay-two .r-sidebar .r-muted   { color: rgba(255,255,255,0.7); }
+
+        .lay-two .r-main { padding: calc(var(--r-gap) * 1.4); }
+
+        /* ════════════════════
+           LAYOUT C — Compact
+        ════════════════════ */
+        .lay-compact { padding: 18px 24px; }
+
+        .lay-compact .r-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 8px;
+            border-bottom: 1.5px solid var(--r-primary);
+            margin-bottom: 12px;
+        }
+        .lay-compact .r-header-right { text-align: right; }
+        .lay-compact .r-contact-item { font-size: 0.78em; }
+
+        /* ═══════════════════════════════════════════
+           RESUME TYPOGRAPHY
+        ═══════════════════════════════════════════ */
+        .r-name {
+            font-size: calc(var(--r-base) * 2.1);
+            font-weight: 700;
+            color: var(--r-primary);
+            line-height: 1.1;
+        }
+        .r-title {
+            font-size: calc(var(--r-base) * 1.08);
+            color: var(--r-muted);
+            font-weight: 400;
+            margin-top: 3px;
+        }
+        .r-contact-item {
+            font-size: 0.82em;
+            color: var(--r-muted);
+        }
+
+        /* Section */
+        .r-section { margin-bottom: var(--r-sgap); }
+
+        .sec-title {
+            font-size: calc(var(--r-base) * 0.9);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--r-primary);
+            border-bottom: 1.5px solid var(--r-primary);
+            padding-bottom: 3px;
+            margin-bottom: calc(var(--r-gap) * 0.6);
+        }
+
+        /* Experience */
+        .exp-item { margin-bottom: calc(var(--r-gap) * 0.75); }
+        .exp-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+        .exp-role { font-weight: 600; font-size: calc(var(--r-base) * 1.0); }
+        .exp-dur  { font-size: 0.8em; color: var(--r-muted); white-space: nowrap; }
+        .exp-co   { font-size: 0.88em; color: var(--r-muted); margin: 2px 0; }
+        .exp-desc { font-size: 0.88em; line-height: 1.55; margin-top: 4px; }
+
+        /* Education */
+        .edu-item  { margin-bottom: calc(var(--r-gap) * 0.6); }
+        .edu-head  { display: flex; justify-content: space-between; align-items: baseline; }
+        .edu-deg   { font-weight: 600; font-size: 0.92em; }
+        .edu-yr    { font-size: 0.8em; color: var(--r-muted); }
+        .edu-inst  { font-size: 0.85em; color: var(--r-muted); margin-top: 1px; }
+
+        /* Skills */
+        .skill-group { margin-bottom: calc(var(--r-gap) * 0.55); }
+        .skill-cat  { font-weight: 600; font-size: 0.82em; margin-bottom: 4px; }
+        .skill-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+        .skill-tag  {
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2px 9px;
+            font-size: 0.78em;
+        }
+
+        /* Summary */
+        .summary-text { font-size: 0.92em; line-height: 1.65; color: var(--r-text); }
+
+        /* Certifications */
+        .cert-item { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+        .cert-name { font-weight: 500; font-size: 0.9em; }
+        .cert-meta { font-size: 0.8em; color: var(--r-muted); }
+
+        /* ═══════════════════════════════════════════
+           CONTENTEDITABLE STATES
+        ═══════════════════════════════════════════ */
+        [contenteditable] {
+            outline: none;
+            border-radius: 3px;
+            transition: background 0.12s;
+            min-width: 10px;
+        }
+        [contenteditable]:hover { background: rgba(246,107,14,0.07); }
+        [contenteditable]:focus { background: rgba(246,107,14,0.12); outline: 1.5px dashed var(--accent); }
+
+        /* ═══════════════════════════════════════════
+           PRINT — PDF export
+        ═══════════════════════════════════════════ */
+        @media print {
+            .builder-shell { display: block; margin: 0; height: auto; }
+            .ctrl-panel, .navbar { display: none !important; }
+            .preview-panel { padding: 0; background: white; }
+            .resume-paper { width: 100%; box-shadow: none; border-radius: 0; }
+            [contenteditable]:hover,
+            [contenteditable]:focus { background: transparent !important; outline: none !important; }
+        }
+
+        /* ═══════════════════════════════════════════
+           RESPONSIVE
+        ═══════════════════════════════════════════ */
+        @media (max-width: 960px) {
+            .builder-shell { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+            .ctrl-panel { flex-direction: row; overflow-x: auto; overflow-y: hidden; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+            .resume-paper { width: 100%; }
+        }
+    </style>
 </head>
 
 <body>
+
+    <!-- Navbar -->
     <nav class="navbar">
         <div class="container nav-content">
             <a href="../index.html" class="logo">CRAFTISM</a>
             <ul class="nav-links">
                 <li class="nav-item"><a href="../index.html">Home</a></li>
                 <li class="nav-item"><a href="../about.html">About</a></li>
-                <li class="nav-item" id="auth-item"><a href="../login.html" class="btn btn-outline"
-                        style="padding: 8px 16px; font-size: 0.9rem;">Login</a></li>
+                <li class="nav-item" id="auth-item">
+                    <a href="../login.html" class="btn btn-outline" style="padding:8px 16px;font-size:0.9rem;">Login</a>
+                </li>
             </ul>
         </div>
     </nav>
-    <div class="container" style="padding-top: 150px; text-align: center;">
-        <h1>Templates</h1>
-        <p>Dance on the beat of a magician.</p>
-        <div
-            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-top: 2rem;">
-            <!-- Placeholders for templates -->
-            <div style="background: #fff; padding: 1rem; border-radius: 8px; box-shadow: var(--shadow-sm);">
-                <div style="height: 200px; background: #eee; margin-bottom: 1rem;"></div>
-                <h3>Modern</h3>
+
+    <!-- App Shell -->
+    <div class="builder-shell">
+
+        <!-- ════════════════════════════════
+             CONTROLS PANEL
+        ════════════════════════════════ -->
+        <aside class="ctrl-panel">
+            <div class="ctrl-head">Resume Builder</div>
+
+            <!-- Layout -->
+            <div class="ctrl-group">
+                <div class="ctrl-label">Layout</div>
+                <div class="layout-row">
+                    <button class="lay-btn active" data-lay="single" onclick="setLayout('single')">
+                        <div class="lay-icon s1"><div class="b"></div></div>Single
+                    </button>
+                    <button class="lay-btn" data-lay="two" onclick="setLayout('two')">
+                        <div class="lay-icon s2"><div class="b"></div><div class="b"></div></div>Two Col
+                    </button>
+                    <button class="lay-btn" data-lay="compact" onclick="setLayout('compact')">
+                        <div class="lay-icon s3"><div class="b"></div></div>Compact
+                    </button>
+                </div>
             </div>
-            <div style="background: #fff; padding: 1rem; border-radius: 8px; box-shadow: var(--shadow-sm);">
-                <div style="height: 200px; background: #eee; margin-bottom: 1rem;"></div>
-                <h3>Classic</h3>
+
+            <!-- Font -->
+            <div class="ctrl-group">
+                <div class="ctrl-label">Font</div>
+                <div class="font-list">
+                    <div class="font-opt active"  style="font-family:'Inter',sans-serif"           data-font="Inter"           onclick="setFont('Inter','sans-serif')">Inter — Modern</div>
+                    <div class="font-opt"          style="font-family:'Roboto',sans-serif"          data-font="Roboto"          onclick="setFont('Roboto','sans-serif')">Roboto — Clean</div>
+                    <div class="font-opt"          style="font-family:'Merriweather',serif"         data-font="Merriweather"    onclick="setFont('Merriweather','serif')">Merriweather — Elegant</div>
+                    <div class="font-opt"          style="font-family:'Source Serif 4',serif"        data-font="Source Serif 4"  onclick="setFont('Source Serif 4','serif')">Source Serif — Classic</div>
+                    <div class="font-opt"          style="font-family:'Playfair Display',serif"     data-font="Playfair Display" onclick="setFont('Playfair Display','serif')">Playfair — Prestige</div>
+                </div>
             </div>
-            <div style="background: #fff; padding: 1rem; border-radius: 8px; box-shadow: var(--shadow-sm);">
-                <div style="height: 200px; background: #eee; margin-bottom: 1rem;"></div>
-                <h3>Creative</h3>
+
+            <!-- Font Size -->
+            <div class="ctrl-group">
+                <div class="ctrl-label">Size</div>
+                <div class="tog-strip">
+                    <button class="tog" data-sz="sm" onclick="setSize('sm')">Small</button>
+                    <button class="tog active" data-sz="md" onclick="setSize('md')">Medium</button>
+                    <button class="tog" data-sz="lg" onclick="setSize('lg')">Large</button>
+                </div>
             </div>
-        </div>
+
+            <!-- Color Themes -->
+            <div class="ctrl-group">
+                <div class="ctrl-label">Color Theme</div>
+                <div class="swatches">
+                    <div class="swatch active" style="background:#1a3c5e" data-color="#1a3c5e" title="Navy"    onclick="setColor('#1a3c5e')"></div>
+                    <div class="swatch"        style="background:#334155" data-color="#334155" title="Slate"   onclick="setColor('#334155')"></div>
+                    <div class="swatch"        style="background:#1a4731" data-color="#1a4731" title="Forest"  onclick="setColor('#1a4731')"></div>
+                    <div class="swatch"        style="background:#7c2d12" data-color="#7c2d12" title="Auburn"  onclick="setColor('#7c2d12')"></div>
+                    <div class="swatch"        style="background:#4c1d95" data-color="#4c1d95" title="Violet"  onclick="setColor('#4c1d95')"></div>
+                    <div class="swatch"        style="background:#0f4c75" data-color="#0f4c75" title="Ocean"   onclick="setColor('#0f4c75')"></div>
+                </div>
+                <div class="custom-color-row">
+                    <label>Custom</label>
+                    <input type="color" id="custom-color" value="#1a3c5e" oninput="setColor(this.value, true)">
+                </div>
+            </div>
+
+            <!-- Spacing Density -->
+            <div class="ctrl-group">
+                <div class="ctrl-label">Spacing</div>
+                <div class="tog-strip">
+                    <button class="tog" data-dn="compact" onclick="setDensity('compact')">Compact</button>
+                    <button class="tog active" data-dn="standard" onclick="setDensity('standard')">Standard</button>
+                    <button class="tog" data-dn="airy" onclick="setDensity('airy')">Airy</button>
+                </div>
+            </div>
+
+            <!-- Section Manager -->
+            <div class="ctrl-group">
+                <div class="ctrl-label">Sections</div>
+                <div class="sec-list" id="sec-list"><!-- rendered by JS --></div>
+            </div>
+
+            <!-- Download -->
+            <div class="ctrl-group">
+                <button class="dl-btn" onclick="window.print()">
+                    <i class="ph ph-download-simple"></i> Download PDF
+                </button>
+            </div>
+        </aside>
+
+        <!-- ════════════════════════════════
+             PREVIEW PANEL
+        ════════════════════════════════ -->
+        <main class="preview-panel">
+            <div id="resume-preview"></div>
+        </main>
     </div>
 
-    <!-- Scripts -->
     <script src="../js/supabase-client.js"></script>
     <script src="../js/auth.js"></script>
-</body>
+    <script>
+    // ══════════════════════════════════════════════════════
+    // 1 ▸ DATA MODEL  — Single Source of Truth
+    // ══════════════════════════════════════════════════════
+    const state = {
+        settings: {
+            layout:       'single',       // 'single' | 'two' | 'compact'
+            font:         'Inter',
+            fontStack:    'sans-serif',
+            fontSize:     'md',           // 'sm' | 'md' | 'lg'
+            color:        '#1a3c5e',
+            density:      'standard',     // 'compact' | 'standard' | 'airy'
+        },
 
+        // Ordered list — drives section order + visibility
+        sections: [
+            { id: 'header',         label: 'Header',         visible: true  },
+            { id: 'summary',        label: 'Summary',        visible: true  },
+            { id: 'experience',     label: 'Experience',     visible: true  },
+            { id: 'education',      label: 'Education',      visible: true  },
+            { id: 'skills',         label: 'Skills',         visible: true  },
+            { id: 'projects',       label: 'Projects',       visible: false },
+            { id: 'certifications', label: 'Certifications', visible: false },
+        ],
+
+        resume: {
+            header: {
+                name:     'Alex Johnson',
+                title:    'Senior Software Engineer',
+                email:    'alex@email.com',
+                phone:    '+1 (555) 000-0000',
+                location: 'San Francisco, CA',
+                linkedin: 'linkedin.com/in/alexj',
+                website:  'alexjohnson.dev',
+            },
+            summary: {
+                text: 'Results-driven engineer with 6+ years building scalable web products. Passionate about clean architecture, developer experience, and shipping software users love.'
+            },
+            experience: [
+                { id:'e1', role:'Senior Software Engineer', company:'Acme Corp', duration:'Jan 2022 — Present',       description:'Led microservices platform serving 2M+ users. Cut API latency 40% via caching and query optimization.' },
+                { id:'e2', role:'Software Engineer',        company:'Startup XYZ', duration:'Jun 2019 — Dec 2021',    description:'Grew React/Node.js SaaS from 0 → 50K users. Built CI/CD pipeline, reducing deploy time by 60%.' },
+            ],
+            education: [
+                { id:'edu1', degree:'B.S. Computer Science', institution:'UC Berkeley', year:'2019', gpa:'3.8' },
+            ],
+            skills: [
+                { id:'sk1', category:'Languages',   items:['TypeScript','Python','Go','SQL'] },
+                { id:'sk2', category:'Frameworks',  items:['React','Node.js','FastAPI','Docker'] },
+                { id:'sk3', category:'Cloud & Tools', items:['AWS','PostgreSQL','Redis','Git'] },
+            ],
+            projects: [
+                { id:'pr1', name:'OpenSearch CLI', description:'Open-source CLI for Elasticsearch. 800+ GitHub stars.', url:'github.com/alexj/opensearch-cli' },
+            ],
+            certifications: [
+                { id:'ce1', name:'AWS Solutions Architect', issuer:'Amazon Web Services', year:'2023' },
+                { id:'ce2', name:'Google Cloud Professional', issuer:'Google', year:'2022' },
+            ],
+        }
+    };
+
+    // Sidebar vs main sections (for two-col layout routing)
+    const SIDEBAR_IDS = ['header','skills','education','certifications'];
+    const MAIN_IDS    = ['summary','experience','projects'];
+
+    // ══════════════════════════════════════════════════════
+    // 2 ▸ SECTION RENDERERS — Pure functions → HTML strings
+    // ══════════════════════════════════════════════════════
+    const R = {
+        header(d, layout) {
+            if (layout === 'two') return `
+                <div class="r-section" id="sec-header">
+                    <div class="r-name"  contenteditable data-f="header.name">${d.name}</div>
+                    <div class="r-title" contenteditable data-f="header.title">${d.title}</div>
+                    <div class="r-contact" style="margin-top:10px;display:flex;flex-direction:column;gap:3px;">
+                        <span contenteditable data-f="header.email">${d.email}</span>
+                        <span contenteditable data-f="header.phone">${d.phone}</span>
+                        <span contenteditable data-f="header.location">${d.location}</span>
+                        <span contenteditable data-f="header.linkedin">${d.linkedin}</span>
+                        ${d.website ? `<span contenteditable data-f="header.website">${d.website}</span>` : ''}
+                    </div>
+                </div>`;
+
+            if (layout === 'compact') return `
+                <div class="r-header" id="sec-header">
+                    <div>
+                        <div class="r-name"  contenteditable data-f="header.name">${d.name}</div>
+                        <div class="r-title" contenteditable data-f="header.title">${d.title}</div>
+                    </div>
+                    <div class="r-header-right">
+                        <div class="r-contact-item" contenteditable data-f="header.email">${d.email}</div>
+                        <div class="r-contact-item" contenteditable data-f="header.phone">${d.phone}</div>
+                        <div class="r-contact-item" contenteditable data-f="header.location">${d.location}</div>
+                    </div>
+                </div>`;
+
+            // Single — centered
+            return `
+                <div class="r-header" id="sec-header">
+                    <div class="r-name"  contenteditable data-f="header.name">${d.name}</div>
+                    <div class="r-title" contenteditable data-f="header.title">${d.title}</div>
+                    <div class="r-contact-row">
+                        <span class="r-contact-item" contenteditable data-f="header.email">${d.email}</span>
+                        <span class="r-contact-item" contenteditable data-f="header.phone">${d.phone}</span>
+                        <span class="r-contact-item" contenteditable data-f="header.location">${d.location}</span>
+                        <span class="r-contact-item" contenteditable data-f="header.linkedin">${d.linkedin}</span>
+                        ${d.website ? `<span class="r-contact-item" contenteditable data-f="header.website">${d.website}</span>` : ''}
+                    </div>
+                </div>`;
+        },
+
+        summary(d) {
+            return `<div class="r-section" id="sec-summary">
+                <div class="sec-title">Summary</div>
+                <div class="summary-text" contenteditable data-f="summary.text">${d.text}</div>
+            </div>`;
+        },
+
+        experience(items) {
+            return `<div class="r-section" id="sec-experience">
+                <div class="sec-title">Experience</div>
+                ${items.map(e => `
+                <div class="exp-item" data-id="${e.id}">
+                    <div class="exp-head">
+                        <span class="exp-role" contenteditable data-f="exp.${e.id}.role">${e.role}</span>
+                        <span class="exp-dur"  contenteditable data-f="exp.${e.id}.duration">${e.duration}</span>
+                    </div>
+                    <div class="exp-co"   contenteditable data-f="exp.${e.id}.company">${e.company}</div>
+                    <div class="exp-desc" contenteditable data-f="exp.${e.id}.description">${e.description}</div>
+                </div>`).join('')}
+            </div>`;
+        },
+
+        education(items) {
+            return `<div class="r-section" id="sec-education">
+                <div class="sec-title">Education</div>
+                ${items.map(e => `
+                <div class="edu-item" data-id="${e.id}">
+                    <div class="edu-head">
+                        <span class="edu-deg"  contenteditable data-f="edu.${e.id}.degree">${e.degree}</span>
+                        <span class="edu-yr"   contenteditable data-f="edu.${e.id}.year">${e.year}</span>
+                    </div>
+                    <div class="edu-inst" contenteditable data-f="edu.${e.id}.institution">${e.institution}</div>
+                </div>`).join('')}
+            </div>`;
+        },
+
+        skills(groups) {
+            return `<div class="r-section" id="sec-skills">
+                <div class="sec-title">Skills</div>
+                ${groups.map(g => `
+                <div class="skill-group" data-id="${g.id}">
+                    <div class="skill-cat" contenteditable data-f="sk.${g.id}.category">${g.category}</div>
+                    <div class="skill-tags">${g.items.map(i => `<span class="skill-tag" contenteditable>${i}</span>`).join('')}</div>
+                </div>`).join('')}
+            </div>`;
+        },
+
+        projects(items) {
+            return `<div class="r-section" id="sec-projects">
+                <div class="sec-title">Projects</div>
+                ${items.map(p => `
+                <div class="exp-item" data-id="${p.id}">
+                    <div class="exp-role" contenteditable data-f="pr.${p.id}.name">${p.name}</div>
+                    <div class="exp-desc" contenteditable data-f="pr.${p.id}.description">${p.description}</div>
+                    ${p.url ? `<div class="r-contact-item" style="margin-top:2px;" contenteditable data-f="pr.${p.id}.url">${p.url}</div>` : ''}
+                </div>`).join('')}
+            </div>`;
+        },
+
+        certifications(items) {
+            return `<div class="r-section" id="sec-certifications">
+                <div class="sec-title">Certifications</div>
+                ${items.map(c => `
+                <div class="cert-item" data-id="${c.id}">
+                    <div>
+                        <div class="cert-name" contenteditable data-f="ce.${c.id}.name">${c.name}</div>
+                        <div class="cert-meta" contenteditable data-f="ce.${c.id}.issuer">${c.issuer}</div>
+                    </div>
+                    <div class="cert-meta" contenteditable data-f="ce.${c.id}.year">${c.year}</div>
+                </div>`).join('')}
+            </div>`;
+        },
+    };
+
+    // ══════════════════════════════════════════════════════
+    // 3 ▸ SECTION HTML DISPATCHER
+    // ══════════════════════════════════════════════════════
+    function getSectionHTML(id, layout) {
+        const r = state.resume;
+        switch (id) {
+            case 'header':         return R.header(r.header, layout);
+            case 'summary':        return R.summary(r.summary);
+            case 'experience':     return R.experience(r.experience);
+            case 'education':      return R.education(r.education);
+            case 'skills':         return R.skills(r.skills);
+            case 'projects':       return R.projects(r.projects);
+            case 'certifications': return R.certifications(r.certifications);
+            default: return '';
+        }
+    }
+
+    // ══════════════════════════════════════════════════════
+    // 4 ▸ LAYOUT BUILDERS — Dynamic, no data loss on switch
+    // ══════════════════════════════════════════════════════
+    function buildLayoutHTML(layout) {
+        const visible = state.sections.filter(s => s.visible).map(s => s.id);
+
+        if (layout === 'two') {
+            const sidebar = visible.filter(id =>  SIDEBAR_IDS.includes(id));
+            const main    = visible.filter(id => !SIDEBAR_IDS.includes(id));
+            return `<div class="lay-two">
+                <div class="r-sidebar">${sidebar.map(id => getSectionHTML(id, 'two')).join('')}</div>
+                <div class="r-main">${main.map(id => getSectionHTML(id, 'two')).join('')}</div>
+            </div>`;
+        }
+
+        if (layout === 'compact') {
+            return `<div class="lay-compact">${visible.map(id => getSectionHTML(id, 'compact')).join('')}</div>`;
+        }
+
+        // Single column (default)
+        return `<div class="lay-single">${visible.map(id => getSectionHTML(id, 'single')).join('')}</div>`;
+    }
+
+    // ══════════════════════════════════════════════════════
+    // 5 ▸ CORE RENDER — One function to update everything
+    // ══════════════════════════════════════════════════════
+    function render() {
+        const { settings } = state;
+
+        // Apply CSS variables
+        const root = document.documentElement;
+        root.style.setProperty('--r-primary', settings.color);
+        root.style.setProperty('--r-font', `'${settings.font}', ${settings.fontStack}`);
+
+        // Build resume
+        const paper = document.getElementById('resume-preview');
+        paper.innerHTML = `
+            <div class="resume-paper fs-${settings.fontSize} dn-${settings.density}" id="r-paper">
+                ${buildLayoutHTML(settings.layout)}
+            </div>`;
+
+        // Attach edit listeners
+        attachEditSync();
+
+        // Re-render section manager list
+        renderSecList();
+    }
+
+    // ══════════════════════════════════════════════════════
+    // 6 ▸ INLINE EDIT SYNC — contenteditable → state
+    // ══════════════════════════════════════════════════════
+    function attachEditSync() {
+        document.querySelectorAll('[contenteditable][data-f]').forEach(el => {
+            el.addEventListener('input', () => syncField(el.dataset.f, el.innerText.trim()));
+        });
+    }
+
+    function syncField(path, val) {
+        const [ns, id, key] = path.split('.');
+        const r = state.resume;
+
+        if (ns === 'header')  { r.header[id] = val; return; }
+        if (ns === 'summary') { r.summary.text = val; return; }
+
+        const maps = { exp: r.experience, edu: r.education, pr: r.projects, ce: r.certifications, sk: r.skills };
+        const arr  = maps[ns];
+        if (arr) {
+            const item = arr.find(x => x.id === id);
+            if (item && key) item[key] = val;
+        }
+    }
+
+    // ══════════════════════════════════════════════════════
+    // 7 ▸ SECTION REORDER — Up/down arrow controls
+    // ══════════════════════════════════════════════════════
+    function renderSecList() {
+        document.getElementById('sec-list').innerHTML = state.sections.map((s, i) => `
+            <div class="sec-row ${!s.visible ? 'off' : ''}" data-i="${i}">
+                <input type="checkbox" ${s.visible ? 'checked' : ''} onchange="toggleSec(${i}, this.checked)">
+                <span class="sec-name">${s.label}</span>
+                <div class="sec-arrows">
+                    <button class="arr-btn" onclick="moveSec(${i},-1)" ${i === 0 ? 'disabled' : ''}>↑</button>
+                    <button class="arr-btn" onclick="moveSec(${i},+1)" ${i === state.sections.length-1 ? 'disabled' : ''}>↓</button>
+                </div>
+            </div>`).join('');
+    }
+
+    function toggleSec(i, v) {
+        state.sections[i].visible = v;
+        render();
+    }
+
+    function moveSec(i, dir) {
+        const j = i + dir;
+        if (j < 0 || j >= state.sections.length) return;
+        [state.sections[i], state.sections[j]] = [state.sections[j], state.sections[i]];
+        render();
+    }
+
+    // ══════════════════════════════════════════════════════
+    // 8 ▸ SETTINGS CONTROLS
+    // ══════════════════════════════════════════════════════
+    function setLayout(lay) {
+        state.settings.layout = lay;
+        document.querySelectorAll('.lay-btn').forEach(b => b.classList.toggle('active', b.dataset.lay === lay));
+        render();
+    }
+
+    function setFont(font, stack) {
+        state.settings.font = font; state.settings.fontStack = stack;
+        document.querySelectorAll('.font-opt').forEach(b => b.classList.toggle('active', b.dataset.font === font));
+        // Font-only update — no full re-render needed
+        document.documentElement.style.setProperty('--r-font', `'${font}', ${stack}`);
+    }
+
+    function setSize(sz) {
+        state.settings.fontSize = sz;
+        document.querySelectorAll('[data-sz]').forEach(b => b.classList.toggle('active', b.dataset.sz === sz));
+        const p = document.getElementById('r-paper');
+        if (p) { p.classList.remove('fs-sm','fs-md','fs-lg'); p.classList.add(`fs-${sz}`); }
+    }
+
+    function setColor(color, fromInput = false) {
+        state.settings.color = color;
+        document.documentElement.style.setProperty('--r-primary', color);
+        document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('active', s.dataset.color === color));
+        if (!fromInput) document.getElementById('custom-color').value = color;
+    }
+
+    function setDensity(dn) {
+        state.settings.density = dn;
+        document.querySelectorAll('[data-dn]').forEach(b => b.classList.toggle('active', b.dataset.dn === dn));
+        const p = document.getElementById('r-paper');
+        if (p) { p.classList.remove('dn-compact','dn-standard','dn-airy'); p.classList.add(`dn-${dn}`); }
+    }
+
+    // ══════════════════════════════════════════════════════
+    // 9 ▸ BOOT
+    // ══════════════════════════════════════════════════════
+    document.addEventListener('DOMContentLoaded', render);
+    </script>
+</body>
 </html>
