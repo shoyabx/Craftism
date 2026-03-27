@@ -192,7 +192,6 @@ function applyTemplate(id) {
 // ── 9. SETTINGS CONTROLS ────────────────────────────
 function syncControlsUI() {
     var s = state.settings;
-    document.querySelectorAll('.lay-btn').forEach(function(b){b.classList.toggle('active',b.dataset.lay===s.layout);});
     document.querySelectorAll('[data-sz]').forEach(function(b){b.classList.toggle('active',b.dataset.sz===s.fontSize);});
     document.querySelectorAll('[data-dn]').forEach(function(b){b.classList.toggle('active',b.dataset.dn===s.density);});
     document.querySelectorAll('[data-paper]').forEach(function(b){b.classList.toggle('active',b.dataset.paper===s.paper);});
@@ -305,7 +304,11 @@ function initUploadZone() {
     var input = document.getElementById('upload-input');
     if (!zone || !input) return;
 
-    zone.addEventListener('click', function() { input.click(); });
+    zone.addEventListener('click', function(e) {
+        if (e.target.tagName === 'INPUT') return; // don't re-trigger
+        var inp = zone.querySelector('input[type=file]') || document.getElementById('upload-input');
+        if (inp) inp.click();
+    });
     zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('drag-over'); });
     zone.addEventListener('dragleave', function() { zone.classList.remove('drag-over'); });
     zone.addEventListener('drop', function(e) {
