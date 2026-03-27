@@ -30,9 +30,8 @@ jobs:
               --request HEAD \
               --max-time 20 \
               --connect-timeout 10 \
-              --retry 0 \
               --user-agent "$UA" \
-              "$TARGET" 2>/dev/null)
+              "$TARGET")
 
             # Fall back to GET if HEAD returns 405 Method Not Allowed
             if [ "$HTTP_STATUS" = "405" ] || [ "$HTTP_STATUS" = "000" ]; then
@@ -44,9 +43,8 @@ jobs:
                 --request GET \
                 --max-time 20 \
                 --connect-timeout 10 \
-                --retry 0 \
                 --user-agent "$UA" \
-                "$TARGET" 2>/dev/null)
+                "$TARGET")
             fi
 
             echo "HTTP status: $HTTP_STATUS"
