@@ -1,0 +1,73 @@
+name: Keep Alive Ping
+
+on:
+  schedule:
+    - cron: '0 3 * * *'   # 03:00 UTC daily (08:30 IST)
+  workflow_dispatch:        # allow manual trigger
+
+jobs:
+  ping:
+    name: Ping craftism.run.place
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Ping site with retry
+        run: |
+          TARGET="https://www.craftism.run.place"
+          UA="CraftismKeepAlive/1.0 (github-actions; +https://github.com/${{ github.repository }})"
+          MAX_RETRIES=3
+          DELAY=15
+          SUCCESS=false
+
+          for attempt in $(seq 1 $MAX_RETRIES); do
+            echo "── Attempt $attempt / $MAX_RETRIES ──────────────────"
+
+            HTTP_STATUS=$(curl \
+              --silent \
+              --output /dev/null \
+              --write-out "%{http_code}" \
+              --request HEAD \
+              --max-time 20 \
+              --connect-timeout 10 \
+              --retry 0 \
+              --user-agent "$UA" \
+              "$TARGET" 2>/dev/null)
+
+            # Fall back to GET if HEAD returns 405 Method Not Allowed
+            if [ "$HTTP_STATUS" = "405" ] || [ "$HTTP_STATUS" = "000" ]; then
+              echo "HEAD returned $HTTP_STATUS — retrying with GET"
+              HTTP_STATUS=$(curl \
+                --silent \
+                --output /dev/null \
+                --write-out "%{http_code}" \
+                --request GET \
+                --max-time 20 \
+                --connect-timeout 10 \
+                --retry 0 \
+                --user-agent "$UA" \
+                "$TARGET" 2>/dev/null)
+            fi
+
+            echo "HTTP status: $HTTP_STATUS"
+
+            # 2xx and 3xx are success
+            if echo "$HTTP_STATUS" | grep -qE '^[23][0-9]{2}$'; then
+              echo "✅ Ping successful (HTTP $HTTP_STATUS)"
+              SUCCESS=true
+              break
+            else
+              echo "⚠️  Non-success status: $HTTP_STATUS"
+              if [ "$attempt" -lt "$MAX_RETRIES" ]; then
+                echo "Waiting ${DELAY}s before retry..."
+                sleep $DELAY
+                DELAY=$((DELAY * 2))   # exponential backoff
+              fi
+            fi
+          done
+
+          if [ "$SUCCESS" = "false" ]; then
+            echo "❌ All $MAX_RETRIES attempts failed — site may be down"
+            echo "Not failing the workflow (transient error policy)"
+          fi
+          exit 0   # never fail the workflow
