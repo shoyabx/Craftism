@@ -1036,6 +1036,11 @@
                 <div class="saved-list" id="saved-list"></div>
             </div>
 
+            <!-- Auto-save status -->
+            <div class="ctrl-group" style="text-align:center;">
+                <span id="autosave-status" style="font-size:0.8rem;font-weight:600;"></span>
+            </div>
+
             <!-- Download -->
             <div class="ctrl-group">
                 <button class="dl-btn" onclick="printResume()">
@@ -1054,9 +1059,10 @@
 
     <script src="../js/supabase-client.js"></script>
     <script src="../js/auth.js"></script>
-    <script src="../js/modules/resume_parser.js?v=3"></script>
-    <script src="../js/modules/upload_handler.js?v=3"></script>
-    <script src="../js/modules/templates.js?v=3"></script>
+    <script src="../js/modules/resume_parser.js?v=4"></script>
+    <script src="../js/modules/upload_handler.js?v=4"></script>
+    <script src="../js/modules/drafts.js?v=1"></script>
+    <script src="../js/modules/templates.js?v=4"></script>
 </body>
 
 </html>

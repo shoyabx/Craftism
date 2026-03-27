@@ -4,10 +4,294 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resume Drafts - Craftism</title>
+    <title>Drafts — Craftism</title>
+    <meta name="description" content="View and manage your saved resume drafts.">
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
     <link rel="stylesheet" href="../css/style.css">
+    <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        .drafts-page {
+            padding-top: 120px;
+            min-height: 80vh;
+            max-width: 900px;
+            margin: 0 auto;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+
+        .drafts-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .drafts-header h1 {
+            font-size: 2.2rem;
+            margin: 0;
+        }
+
+        .drafts-header .badge {
+            background: var(--color-accent);
+            color: white;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            font-family: var(--font-body);
+        }
+
+        .auth-banner {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.95rem;
+            color: #92400e;
+        }
+
+        .auth-banner i {
+            font-size: 1.3rem;
+        }
+
+        .auth-banner a {
+            color: var(--color-accent);
+            font-weight: 700;
+        }
+
+        /* Grid */
+        .drafts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+
+        /* Card */
+        .d-card {
+            background: #fff;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.25rem;
+            transition: all 0.25s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .d-card:hover {
+            border-color: var(--color-accent);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .d-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            gap: 0.5rem;
+        }
+
+        .d-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #112B3C;
+            margin: 0;
+            cursor: text;
+            word-break: break-word;
+            text-transform: none;
+            font-family: var(--font-body);
+            letter-spacing: 0;
+            line-height: 1.4;
+        }
+
+        .d-meta {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .d-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.78rem;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-family: var(--font-body);
+        }
+
+        .d-tag.created {
+            background: #ede9fe;
+            color: #5b21b6;
+        }
+
+        .d-tag.uploaded {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .d-tag.template {
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .d-tag.date {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .d-tag.ats {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .d-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .d-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 700;
+            font-family: var(--font-body);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .d-btn-open {
+            background: var(--color-accent);
+            color: white;
+            flex: 1;
+        }
+
+        .d-btn-open:hover {
+            background: #e55d06;
+        }
+
+        .d-btn-rename {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .d-btn-rename:hover {
+            background: #e2e8f0;
+        }
+
+        .d-btn-delete {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .d-btn-delete:hover {
+            background: #fecaca;
+        }
+
+        /* Empty */
+        .drafts-empty {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6B7280;
+        }
+
+        .drafts-empty i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: #d1d5db;
+        }
+
+        .drafts-empty p {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .drafts-loading {
+            text-align: center;
+            padding: 3rem;
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+
+        /* Rename modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.visible {
+            display: flex;
+        }
+
+        .modal-box {
+            background: white;
+            border-radius: 14px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-box h3 {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .modal-box input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: var(--font-body);
+            margin-bottom: 1rem;
+        }
+
+        .modal-box input:focus {
+            border-color: var(--color-accent);
+            outline: none;
+        }
+
+        .modal-btns {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+
+        @media (max-width: 600px) {
+            .drafts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .drafts-header {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: flex-start;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -22,216 +306,192 @@
             </ul>
         </div>
     </nav>
-    <div class="container" style="padding-top: 150px; min-height: 80vh;">
-        <h1>Drafts</h1>
-        <p>Look back on your past sins.</p>
-        <div id="drafts-container" style="margin-top: 2rem;">
-            <!-- Drafts will be loaded here -->
+
+    <div class="drafts-page">
+        <div class="drafts-header">
+            <h1>Drafts</h1>
+            <span class="badge" id="draft-count" style="display:none;"></span>
+        </div>
+
+        <div id="auth-banner" class="auth-banner" style="display:none;">
+            <i class="ph ph-warning-circle"></i>
+            <span>You're not logged in. Guest drafts are <strong>temporary</strong> and will be lost when you close the
+                browser.
+                <a href="../login.html">Login</a> to save permanently.</span>
+        </div>
+
+        <div id="drafts-container">
+            <div class="drafts-loading"><i class="ph ph-spinner"></i> Loading drafts…</div>
         </div>
     </div>
 
-    <style>
-        .drafts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 2rem;
-        }
+    <!-- Rename Modal -->
+    <div class="modal-overlay" id="rename-modal">
+        <div class="modal-box">
+            <h3>Rename Draft</h3>
+            <input type="text" id="rename-input" placeholder="Enter new name" />
+            <div class="modal-btns">
+                <button class="d-btn d-btn-rename" onclick="closeRenameModal()">Cancel</button>
+                <button class="d-btn d-btn-open" onclick="confirmRename()">Save</button>
+            </div>
+        </div>
+    </div>
 
-        .draft-card {
-            background: white;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 1.5rem;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .draft-card:hover {
-            border-color: #F66B0E;
-            transform: translateY(-4px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-        }
-
-        .draft-card.auto-save {
-            background: #fef3c7;
-            border-color: #fbbf24;
-        }
-
-        .draft-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 1rem;
-        }
-
-        .draft-name {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #112B3C;
-            margin: 0;
-        }
-
-        .draft-date {
-            font-size: 0.85rem;
-            color: #6B7280;
-            margin-top: 0.5rem;
-        }
-
-        .draft-preview {
-            font-size: 0.9rem;
-            color: #4B5563;
-            margin-top: 0.75rem;
-            max-height: 60px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .draft-actions {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .draft-btn {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: bold;
-            transition: all 0.2s ease;
-        }
-
-        .draft-btn-load {
-            background: #10b981;
-            color: white;
-            flex: 1;
-        }
-
-        .draft-btn-load:hover {
-            background: #059669;
-        }
-
-        .draft-btn-delete {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .draft-btn-delete:hover {
-            background: #fecaca;
-        }
-
-        .no-drafts {
-            text-align: center;
-            padding: 3rem;
-            color: #666;
-            font-style: italic;
-        }
-    </style>
-
-    <script>
-        const DRAFTS_KEY = 'craftism-resume-drafts';
-
-        // Get all drafts from localStorage
-        function getAllDrafts() {
-            const draftsJson = localStorage.getItem(DRAFTS_KEY);
-            return draftsJson ? JSON.parse(draftsJson) : [];
-        }
-
-        // Save all drafts to localStorage
-        function saveAllDrafts(drafts) {
-            localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
-        }
-
-        // Delete a draft
-        function deleteDraft(index, event) {
-            // Stop event propagation to prevent any bubbling
-            if (event) {
-                event.stopPropagation();
-                event.preventDefault();
-            }
-
-            const drafts = getAllDrafts();
-            const draftName = drafts[index].name;
-
-            // Use a more reliable confirmation
-            const confirmed = window.confirm(`Delete draft "${draftName}"?\n\nThis action cannot be undone.`);
-
-            if (confirmed) {
-                drafts.splice(index, 1);
-                saveAllDrafts(drafts);
-                // Reload the drafts display
-                loadDrafts();
-            }
-        }
-
-        // Load a draft (redirect to createresume.html with draft ID)
-        function loadDraft(draftId) {
-            window.location.href = `createresume.html?draftId=${draftId}`;
-        }
-
-        // Get text preview from HTML content
-        function getTextPreview(html, maxLength = 100) {
-            const div = document.createElement('div');
-            div.innerHTML = html;
-            const text = div.textContent || div.innerText || '';
-            return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-        }
-
-        // Load and display all drafts
-        function loadDrafts() {
-            const drafts = getAllDrafts();
-            const container = document.getElementById('drafts-container');
-
-            if (drafts.length === 0) {
-                container.innerHTML = '<div class="no-drafts">No drafts saved yet. Start creating!</div>';
-                return;
-            }
-
-            const grid = document.createElement('div');
-            grid.className = 'drafts-grid';
-
-            drafts.forEach((draft, index) => {
-                const card = document.createElement('div');
-                card.className = 'draft-card' + (draft.name === '[Auto-Save]' ? ' auto-save' : '');
-
-                const preview = getTextPreview(draft.content);
-
-                card.innerHTML = `
-                    <div class="draft-card-header">
-                        <div>
-                            <h3 class="draft-name">${draft.name}</h3>
-                            <div class="draft-date">
-                                <i class="ph ph-clock"></i> ${draft.lastModified}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="draft-preview">${preview}</div>
-                    <div class="draft-actions">
-                        <button class="draft-btn draft-btn-load" onclick="loadDraft(${draft.id})">
-                            <i class="ph ph-folder-open"></i> Load
-                        </button>
-                        <button class="draft-btn draft-btn-delete" onclick="deleteDraft(${index}, event)">
-                            <i class="ph ph-trash"></i> Delete
-                        </button>
-                    </div>
-                `;
-
-                grid.appendChild(card);
-            });
-
-            container.innerHTML = '';
-            container.appendChild(grid);
-        }
-
-        // Load drafts on page load
-        document.addEventListener('DOMContentLoaded', loadDrafts);
-    </script>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <h3>CRAFTISM</h3>
+            <p>&copy; 2026 Craftism. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="http://linkedin.com/in/mshoyab"><i class="ph ph-linkedin-logo"></i></a>
+                <a href="https://github.com/shoyabx"><i class="ph ph-github-logo"></i></a>
+                <a href="mailto:md.shoyab@zohomail.com"><i class="ph ph-envelope"></i></a>
+            </div>
+        </div>
+    </footer>
 
     <script src="../js/supabase-client.js"></script>
     <script src="../js/auth.js"></script>
+    <script src="../js/modules/drafts.js"></script>
+    <script>
+        var _renameTargetId = null;
+
+        // ── Load + render all drafts ─────────────────
+        async function loadDraftsList() {
+            var container = document.getElementById('drafts-container');
+            container.innerHTML = '<div class="drafts-loading"><i class="ph ph-spinner"></i> Loading drafts…</div>';
+
+            try {
+                var user = null;
+                if (typeof checkAuthState === 'function') {
+                    user = await checkAuthState();
+                }
+
+                // Show auth banner for guests
+                if (!user) {
+                    document.getElementById('auth-banner').style.display = '';
+                }
+
+                var drafts = await draftsFetchAll();
+
+                if (!drafts || drafts.length === 0) {
+                    container.innerHTML =
+                        '<div class="drafts-empty">' +
+                        '<i class="ph ph-note-blank"></i>' +
+                        '<p>No drafts yet</p>' +
+                        '<a href="templates.html" class="btn btn-primary" style="padding:10px 24px;">Create Resume</a>' +
+                        '</div>';
+                    return;
+                }
+
+                // Show count
+                var countEl = document.getElementById('draft-count');
+                countEl.textContent = drafts.length + (drafts.length === 1 ? ' draft' : ' drafts');
+                countEl.style.display = '';
+
+                var grid = document.createElement('div');
+                grid.className = 'drafts-grid';
+
+                drafts.forEach(function (d) {
+                    var card = document.createElement('div');
+                    card.className = 'd-card';
+
+                    var dateStr = d.updated_at ? new Date(d.updated_at).toLocaleDateString('en-US', {
+                        month: 'short', day: 'numeric', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                    }) : 'Unknown';
+
+                    var templateName = d.template ? d.template.charAt(0).toUpperCase() + d.template.slice(1) : 'Classic';
+                    var sourceTag = d.source_type === 'uploaded'
+                        ? '<span class="d-tag uploaded"><i class="ph ph-upload-simple"></i> Imported</span>'
+                        : '<span class="d-tag created"><i class="ph ph-pencil-simple"></i> Created</span>';
+
+                    var atsTag = '';
+                    if (d.ats_score && typeof d.ats_score === 'object' && d.ats_score.score != null) {
+                        atsTag = '<span class="d-tag ats"><i class="ph ph-chart-line-up"></i> ATS: ' + d.ats_score.score + '</span>';
+                    }
+
+                    card.innerHTML =
+                        '<div class="d-card-top">' +
+                        '<h3 class="d-title">' + escapeHTML(d.title) + '</h3>' +
+                        '</div>' +
+                        '<div class="d-meta">' +
+                        sourceTag +
+                        '<span class="d-tag template"><i class="ph ph-layout"></i> ' + templateName + '</span>' +
+                        atsTag +
+                        '<span class="d-tag date"><i class="ph ph-clock"></i> ' + dateStr + '</span>' +
+                        '</div>' +
+                        '<div class="d-actions">' +
+                        '<button class="d-btn d-btn-open" onclick="openDraft(\'' + d.id + '\')"><i class="ph ph-pencil-simple-line"></i> Edit</button>' +
+                        '<button class="d-btn d-btn-rename" onclick="openRenameModal(\'' + d.id + '\', this)" title="Rename"><i class="ph ph-text-aa"></i></button>' +
+                        '<button class="d-btn d-btn-delete" onclick="deleteDraftItem(\'' + d.id + '\')" title="Delete"><i class="ph ph-trash"></i></button>' +
+                        '</div>';
+
+                    grid.appendChild(card);
+                });
+
+                container.innerHTML = '';
+                container.appendChild(grid);
+            } catch (e) {
+                console.error('Failed to load drafts:', e);
+                container.innerHTML = '<div class="drafts-empty"><p>Failed to load drafts. Please try again.</p></div>';
+            }
+        }
+
+        // ── Actions ──────────────────────────────────
+        function openDraft(id) {
+            window.location.href = 'templates.html?draft=' + encodeURIComponent(id);
+        }
+
+        async function deleteDraftItem(id) {
+            if (!confirm('Delete this draft? This cannot be undone.')) return;
+            try {
+                await draftsDelete(id);
+                loadDraftsList();
+            } catch (e) {
+                alert('Failed to delete: ' + e.message);
+            }
+        }
+
+        function openRenameModal(id, btn) {
+            _renameTargetId = id;
+            var currentTitle = btn.closest('.d-card').querySelector('.d-title').textContent;
+            document.getElementById('rename-input').value = currentTitle;
+            document.getElementById('rename-modal').classList.add('visible');
+            document.getElementById('rename-input').focus();
+        }
+
+        function closeRenameModal() {
+            _renameTargetId = null;
+            document.getElementById('rename-modal').classList.remove('visible');
+        }
+
+        async function confirmRename() {
+            var newTitle = document.getElementById('rename-input').value.trim();
+            if (!newTitle || !_renameTargetId) { closeRenameModal(); return; }
+            try {
+                await draftsRename(_renameTargetId, newTitle);
+                closeRenameModal();
+                loadDraftsList();
+            } catch (e) {
+                alert('Failed to rename: ' + e.message);
+            }
+        }
+
+        // Close modal with Escape
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeRenameModal();
+        });
+
+        function escapeHTML(str) {
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ── Boot ─────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', loadDraftsList);
+    </script>
 </body>
 
 </html>
