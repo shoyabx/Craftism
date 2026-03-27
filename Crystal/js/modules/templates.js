@@ -297,7 +297,6 @@ async function loadResume(id) {
 }
 
 // ── 11. UPLOAD INTEGRATION ──────────────────────────
-var uploadedOriginalHTML = null; // Store original HTML for "Original Mode"
 var uploadATSResult = null;
 var uploadMode = 'template'; // 'original' | 'template'
 
@@ -354,8 +353,9 @@ async function processUploadedFile(file) {
             alert('No content found in file.'); resetUploadZone(); return;
         }
 
-        // Store original HTML for "Original Mode"
-        uploadedOriginalHTML = isHTML ? content : '<pre style="white-space:pre-wrap;font-family:inherit;font-size:inherit;">' + content.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</pre>';
+        // Store raw content for "Original Mode"
+        uploadedRawContent = content;
+        uploadedIsHTML = isHTML;
 
         // Parse into structured JSON
         var parsed = parseResumeText(content, isHTML);
@@ -415,6 +415,9 @@ function renderATSPanel() {
 }
 
 // ── 13. MODE TOGGLE ─────────────────────────────────
+var uploadedRawContent = null;  // raw text/html as extracted
+var uploadedIsHTML = false;
+
 function showModeToggle() {
     var el = document.getElementById('mode-toggle');
     if (!el) return;
@@ -428,11 +431,18 @@ function setMode(mode) {
         b.classList.toggle('active', (i === 0 && mode === 'original') || (i === 1 && mode === 'template'));
     });
 
-    if (mode === 'original' && uploadedOriginalHTML) {
-        // Render original HTML directly on the paper
+    if (mode === 'original' && uploadedRawContent) {
         var s = state.settings;
+        var inner = '';
+        if (uploadedIsHTML) {
+            inner = uploadedRawContent;
+        } else {
+            // Plain text: escape HTML entities and wrap in styled pre
+            var safe = uploadedRawContent.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            inner = '<pre style="white-space:pre-wrap;word-wrap:break-word;font-family:var(--r-font);font-size:var(--r-base);line-height:1.6;margin:0;">' + safe + '</pre>';
+        }
         document.getElementById('resume-preview').innerHTML =
-            '<div class="resume-paper paper-' + s.paper + '" id="r-paper" style="padding:24px 32px;font-family:var(--r-font);font-size:var(--r-base);line-height:1.55;color:var(--r-text);">' + uploadedOriginalHTML + '</div>';
+            '<div class="resume-paper paper-' + s.paper + '" id="r-paper" style="padding:24px 32px;font-family:var(--r-font);font-size:var(--r-base);line-height:1.55;color:var(--r-text);">' + inner + '</div>';
     } else {
         render();
     }
@@ -450,7 +460,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         var uploaded = getUploadedContent();
         if (uploaded) {
             var isHTML = uploaded.format === 'html';
-            uploadedOriginalHTML = isHTML ? uploaded.content : '<pre style="white-space:pre-wrap;font-family:inherit;font-size:inherit;">' + uploaded.content.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</pre>';
+            uploadedRawContent = uploaded.content;
+            uploadedIsHTML = isHTML;
             var parsed = parseResumeText(uploaded.content, isHTML);
             if (parsed) {
                 Object.assign(state.resume, parsed.resume);
