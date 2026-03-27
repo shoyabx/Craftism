@@ -22,6 +22,11 @@
 
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- DOCX parser -->
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+    <!-- PDF parser -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 
     <style>
         /* ═══════════════════════════════════════════
@@ -812,6 +817,38 @@
             color: #94a3b8;
         }
 
+        /* Upload dropzone (inline in sidebar) */
+        .upload-zone { border: 2px dashed var(--border); border-radius: 7px; padding: 12px; text-align: center; cursor: pointer; transition: all 0.15s; background: #fafbfc; }
+        .upload-zone:hover, .upload-zone.drag-over { border-color: var(--accent); background: var(--accent-lt); }
+        .upload-zone .uz-icon { font-size: 1.4rem; color: #94a3b8; margin-bottom: 4px; }
+        .upload-zone .uz-text { font-size: 0.68rem; color: var(--muted); }
+        .upload-zone input[type=file] { display: none; }
+
+        /* ATS Score badge */
+        .ats-panel { margin-top: 8px; }
+        .ats-score-badge { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; background: #f0fdf4; border: 1px solid #bbf7d0; }
+        .ats-score-badge.grade-a { background: #f0fdf4; border-color: #bbf7d0; }
+        .ats-score-badge.grade-b { background: #fefce8; border-color: #fde68a; }
+        .ats-score-badge.grade-c { background: #fff7ed; border-color: #fed7aa; }
+        .ats-score-badge.grade-d { background: #fef2f2; border-color: #fecaca; }
+        .ats-num { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+        .ats-grade-a .ats-num { color: #16a34a; }
+        .ats-grade-b .ats-num { color: #ca8a04; }
+        .ats-grade-c .ats-num { color: #ea580c; }
+        .ats-grade-d .ats-num { color: #dc2626; }
+        .ats-label { font-size: 0.65rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .ats-flags { margin-top: 6px; }
+        .ats-flag { font-size: 0.68rem; padding: 2px 0; display: flex; align-items: baseline; gap: 5px; }
+        .ats-flag .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .ats-flag .dot.pass { background: #16a34a; }
+        .ats-flag .dot.fail { background: #dc2626; }
+
+        /* Mode toggle */
+        .mode-strip { display: flex; border: 2px solid var(--accent); border-radius: 7px; overflow: hidden; margin-top: 6px; }
+        .mode-btn { flex: 1; padding: 6px 4px; border: none; background: white; cursor: pointer; font-size: 0.68rem; font-weight: 700; color: var(--accent); transition: all 0.12s; text-align: center; }
+        .mode-btn.active { background: var(--accent); color: white; }
+        .mode-btn:first-child { border-right: 1px solid var(--accent); }
+
         /* Paper size */
         .paper-a4 {
             width: 750px;
@@ -904,33 +941,22 @@
         <aside class="ctrl-panel">
             <div class="ctrl-head">Resume Builder</div>
 
+            <!-- Upload Resume -->
+            <div class="ctrl-group">
+                <div class="ctrl-label">Upload Resume</div>
+                <div class="upload-zone" id="upload-zone">
+                    <div class="uz-icon"><i class="ph ph-upload-simple"></i></div>
+                    <div class="uz-text">Drop PDF or DOCX here, or click</div>
+                    <input type="file" id="upload-input" accept=".pdf,.docx,.doc,.txt">
+                </div>
+                <div id="ats-panel" class="ats-panel" style="display:none;"></div>
+                <div id="mode-toggle" style="display:none;"></div>
+            </div>
+
             <!-- Template Presets -->
             <div class="ctrl-group">
                 <div class="ctrl-label">Template</div>
                 <div class="tpl-grid" id="tpl-grid"><!-- rendered by JS --></div>
-            </div>
-
-            <!-- Layout -->
-            <div class="ctrl-group">
-                <div class="ctrl-label">Layout</div>
-                <div class="layout-row">
-                    <button class="lay-btn active" data-lay="single" onclick="setLayout('single')">
-                        <div class="lay-icon s1">
-                            <div class="b"></div>
-                        </div>Single
-                    </button>
-                    <button class="lay-btn" data-lay="two" onclick="setLayout('two')">
-                        <div class="lay-icon s2">
-                            <div class="b"></div>
-                            <div class="b"></div>
-                        </div>Two Col
-                    </button>
-                    <button class="lay-btn" data-lay="compact" onclick="setLayout('compact')">
-                        <div class="lay-icon s3">
-                            <div class="b"></div>
-                        </div>Compact
-                    </button>
-                </div>
             </div>
 
             <!-- Font -->
@@ -1028,6 +1054,8 @@
 
     <script src="../js/supabase-client.js"></script>
     <script src="../js/auth.js"></script>
+    <script src="../js/modules/resume_parser.js"></script>
+    <script src="../js/modules/upload_handler.js"></script>
     <script src="../js/modules/templates.js"></script>
 </body>
 

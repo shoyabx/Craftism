@@ -8,8 +8,11 @@
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
     <link rel="stylesheet" href="../css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Mammoth.js for DOCX to HTML conversion -->
+    <!-- DOCX parser -->
     <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+    <!-- PDF parser -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 </head>
 
 <body>
@@ -40,7 +43,7 @@
             </button>
 
             <p style="margin-top: 1.5rem; font-size: 0.85rem; color: #9ca3af;">
-                Supported formats: <strong>TXT, DOCX, DOC</strong> (PDF coming soon)
+                Supported formats: <strong>PDF, DOCX, TXT</strong>
             </p>
         </div>
 

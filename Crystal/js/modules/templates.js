@@ -296,10 +296,177 @@ async function loadResume(id) {
     } catch(e) { console.error(e); setStatus('Load failed: ' + e.message, true); }
 }
 
-// ── 11. BOOT ────────────────────────────────────────
+// ── 11. UPLOAD INTEGRATION ──────────────────────────
+var uploadedOriginalHTML = null; // Store original HTML for "Original Mode"
+var uploadATSResult = null;
+var uploadMode = 'template'; // 'original' | 'template'
+
+function initUploadZone() {
+    var zone = document.getElementById('upload-zone');
+    var input = document.getElementById('upload-input');
+    if (!zone || !input) return;
+
+    zone.addEventListener('click', function() { input.click(); });
+    zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', function() { zone.classList.remove('drag-over'); });
+    zone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        var file = e.dataTransfer.files[0];
+        if (file) processUploadedFile(file);
+    });
+    input.addEventListener('change', function(e) {
+        var file = e.target.files[0];
+        if (file) processUploadedFile(file);
+    });
+}
+
+async function processUploadedFile(file) {
+    var zone = document.getElementById('upload-zone');
+    zone.innerHTML = '<div class="uz-icon"><i class="ph ph-spinner"></i></div><div class="uz-text">Processing ' + file.name + '...</div>';
+
+    var fileName = file.name.toLowerCase();
+    var content = '';
+    var isHTML = false;
+
+    try {
+        if (fileName.endsWith('.txt')) {
+            content = await readTextFile(file);
+        } else if (fileName.endsWith('.pdf')) {
+            if (typeof pdfjsLib !== 'undefined') {
+                content = await extractPDFText(file);
+            } else {
+                alert('PDF parsing library not loaded.'); resetUploadZone(); return;
+            }
+        } else if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) {
+            if (typeof mammoth === 'undefined') {
+                alert('DOCX parsing library not loaded.'); resetUploadZone(); return;
+            }
+            var buf = await readFileAsArrayBuffer(file);
+            var result = await mammoth.convertToHtml({ arrayBuffer: buf, includeDefaultStyleMap: true });
+            content = result.value;
+            isHTML = true;
+        } else {
+            alert('Unsupported file type.'); resetUploadZone(); return;
+        }
+
+        if (!content || !content.trim()) {
+            alert('No content found in file.'); resetUploadZone(); return;
+        }
+
+        // Store original HTML for "Original Mode"
+        uploadedOriginalHTML = isHTML ? content : '<pre style="white-space:pre-wrap;font-family:inherit;font-size:inherit;">' + content.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</pre>';
+
+        // Parse into structured JSON
+        var parsed = parseResumeText(content, isHTML);
+        if (!parsed) { alert('Could not parse resume content.'); resetUploadZone(); return; }
+
+        // Inject into state
+        Object.assign(state.resume, parsed.resume);
+        state.sections.length = 0;
+        parsed.sections.forEach(function(s) { state.sections.push(s); });
+
+        // Run ATS analysis
+        uploadATSResult = analyzeATS(parsed.resume);
+
+        // Update UI
+        zone.innerHTML = '<div class="uz-icon" style="color:#16a34a;"><i class="ph ph-check-circle"></i></div><div class="uz-text">' + file.name + ' parsed</div>';
+        renderATSPanel();
+        showModeToggle();
+        uploadMode = 'template';
+        render();
+
+    } catch(err) {
+        console.error('Parse error:', err);
+        alert('Failed to parse: ' + err.message);
+        resetUploadZone();
+    }
+}
+
+function resetUploadZone() {
+    var zone = document.getElementById('upload-zone');
+    if (zone) zone.innerHTML = '<div class="uz-icon"><i class="ph ph-upload-simple"></i></div><div class="uz-text">Drop PDF or DOCX here, or click</div><input type="file" id="upload-input" accept=".pdf,.docx,.doc,.txt">';
+    initUploadZone(); // re-bind
+}
+
+// ── 12. ATS PANEL RENDERING ─────────────────────────
+function renderATSPanel() {
+    var panel = document.getElementById('ats-panel');
+    if (!panel || !uploadATSResult) return;
+
+    var a = uploadATSResult;
+    var g = a.grade.toLowerCase();
+    var html = '<div class="ats-score-badge grade-' + g + ' ats-grade-' + g + '">';
+    html += '<div class="ats-num">' + a.score + '</div>';
+    html += '<div><div class="ats-label">ATS Score</div><div class="ats-label">Grade: ' + a.grade + '</div></div>';
+    html += '</div>';
+
+    // Show only fail flags (improvement suggestions)
+    var fails = a.flags.filter(function(f) { return f.status === 'fail'; });
+    if (fails.length > 0) {
+        html += '<div class="ats-flags">';
+        fails.forEach(function(f) {
+            html += '<div class="ats-flag"><span class="dot fail"></span>' + f.message + '</div>';
+        });
+        html += '</div>';
+    }
+    panel.innerHTML = html;
+    panel.style.display = '';
+}
+
+// ── 13. MODE TOGGLE ─────────────────────────────────
+function showModeToggle() {
+    var el = document.getElementById('mode-toggle');
+    if (!el) return;
+    el.innerHTML = '<div class="mode-strip"><button class="mode-btn" onclick="setMode(\'original\')">Original</button><button class="mode-btn active" onclick="setMode(\'template\')">Apply Template</button></div>';
+    el.style.display = '';
+}
+
+function setMode(mode) {
+    uploadMode = mode;
+    document.querySelectorAll('.mode-btn').forEach(function(b, i) {
+        b.classList.toggle('active', (i === 0 && mode === 'original') || (i === 1 && mode === 'template'));
+    });
+
+    if (mode === 'original' && uploadedOriginalHTML) {
+        // Render original HTML directly on the paper
+        var s = state.settings;
+        document.getElementById('resume-preview').innerHTML =
+            '<div class="resume-paper paper-' + s.paper + '" id="r-paper" style="padding:24px 32px;font-family:var(--r-font);font-size:var(--r-base);line-height:1.55;color:var(--r-text);">' + uploadedOriginalHTML + '</div>';
+    } else {
+        render();
+    }
+}
+
+// ── 14. BOOT ────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async function() {
     render();
     setPaper('a4');
+    initUploadZone();
+
+    // Check for ?upload=true redirect from upload_resume.html
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('upload') === 'true' && typeof getUploadedContent === 'function') {
+        var uploaded = getUploadedContent();
+        if (uploaded) {
+            var isHTML = uploaded.format === 'html';
+            uploadedOriginalHTML = isHTML ? uploaded.content : '<pre style="white-space:pre-wrap;font-family:inherit;font-size:inherit;">' + uploaded.content.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</pre>';
+            var parsed = parseResumeText(uploaded.content, isHTML);
+            if (parsed) {
+                Object.assign(state.resume, parsed.resume);
+                state.sections.length = 0;
+                parsed.sections.forEach(function(s) { state.sections.push(s); });
+                uploadATSResult = analyzeATS(parsed.resume);
+                renderATSPanel();
+                showModeToggle();
+                var zone = document.getElementById('upload-zone');
+                if (zone) zone.innerHTML = '<div class="uz-icon" style="color:#16a34a;"><i class="ph ph-check-circle"></i></div><div class="uz-text">Uploaded resume loaded</div>';
+                render();
+            }
+            // Clean URL
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+    }
 
     // Auth gate for cloud save section
     if (typeof checkAuthState === 'function') {
