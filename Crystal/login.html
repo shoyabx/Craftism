@@ -47,13 +47,22 @@
     <script>
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const errorMsg = document.getElementById('error-msg');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
 
-            if (!supabaseClient) initSupabase();
+            errorMsg.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Signing In...';
 
             try {
+                // Ensure Supabase is initialized
+                if (!supabaseClient) {
+                    const ready = await waitForSupabase();
+                    if (!ready) throw new Error('Could not connect to authentication service. Please refresh and try again.');
+                }
+
                 const { data, error } = await supabaseClient.auth.signInWithPassword({
                     email: email,
                     password: password,
@@ -66,8 +75,11 @@
                 window.location.href = redirectUrl;
 
             } catch (error) {
-                errorMsg.textContent = error.message;
+                console.error('Login error:', error);
+                errorMsg.textContent = error.message || 'Login failed. Please check your credentials.';
                 errorMsg.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Sign In';
             }
         });
     </script>

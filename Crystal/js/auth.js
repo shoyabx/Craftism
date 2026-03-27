@@ -36,7 +36,10 @@ async function checkAuthState() {
  * @returns {Promise<Object|null>} Profile data
  */
 async function getUserProfile(userId) {
-    if (!supabaseClient) initSupabase();
+    if (!supabaseClient) {
+        const ready = await waitForSupabase();
+        if (!ready) return null;
+    }
 
     try {
         const { data, error } = await supabaseClient
@@ -105,7 +108,13 @@ async function updateNavbar() {
  * Logout user and redirect to home
  */
 async function logout() {
-    if (!supabaseClient) initSupabase();
+    if (!supabaseClient) {
+        const ready = await waitForSupabase();
+        if (!ready) {
+            alert('Could not connect. Please refresh the page.');
+            return;
+        }
+    }
 
     try {
         const { error } = await supabaseClient.auth.signOut();

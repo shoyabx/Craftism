@@ -1,4 +1,3 @@
-e
 <!DOCTYPE html>
 <html lang="en">
 
@@ -47,9 +46,7 @@ e
         </p>
 
         <div id="error-msg" style="color: red; text-align: center; margin-top: 1rem; display: none;"></div>
-        <div id="success-msg" style="color: green; text-align: center; margin-top: 1rem; display: none;">
-            Registration successful! Redirecting...
-        </div>
+        <div id="success-msg" style="color: green; text-align: center; margin-top: 1rem; display: none;"></div>
     </div>
 
     <script src="js/supabase-client.js"></script>
@@ -57,57 +54,75 @@ e
     <script>
         document.getElementById('register-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
+
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const errorMsg = document.getElementById('error-msg');
             const successMsg = document.getElementById('success-msg');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
 
-            if (!supabaseClient) initSupabase();
+            // Reset messages
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating Account...';
 
             try {
+                // Ensure Supabase is initialized
+                if (!supabaseClient) {
+                    const ready = await waitForSupabase();
+                    if (!ready) throw new Error('Could not connect to authentication service. Please refresh the page and try again.');
+                }
+
                 // 1. Sign up user
                 const { data: authData, error: authError } = await supabaseClient.auth.signUp({
                     email: email,
                     password: password,
                     options: {
-                        data: {
-                            full_name: name,
-                        }
+                        data: { full_name: name }
                     }
                 });
 
                 if (authError) throw authError;
 
-                // 2. Create profile entry (Trigger usually handles this, but since we have a manual table logic in setup.sql without trigger, 
-                //    we might need to insert manually OR rely on a trigger if created. 
-                //    My setup.sql didn't strictly add a trigger, so let's try manual insert safely.)
-
+                // Check if email confirmation is required
                 const user = authData.user;
-                if (user) {
+                const session = authData.session;
+
+                if (user && !session) {
+                    // Email confirmation required
+                    successMsg.textContent = 'Registration successful! Please check your email to confirm your account.';
+                    successMsg.style.display = 'block';
+                    submitBtn.textContent = 'Check Your Email';
+                    return;
+                }
+
+                // 2. Create profile entry if session is active
+                if (user && session) {
                     const { error: profileError } = await supabaseClient
                         .from('profiles')
-                        .insert([
-                            { id: user.id, email: email, full_name: name }
-                        ]);
+                        .insert([{ id: user.id, email: email, full_name: name }]);
 
-                    if (profileError) {
-                        // Ignore duplicate key error if trigger exists
+                    if (profileError && profileError.code !== '23505') {
+                        // 23505 = unique violation (profile already exists via trigger), safe to ignore
                         console.warn('Profile creation warning:', profileError);
                     }
                 }
 
+                successMsg.textContent = 'Registration successful! Redirecting...';
                 successMsg.style.display = 'block';
-                errorMsg.style.display = 'none';
 
                 setTimeout(() => {
                     window.location.href = 'profile.html';
                 }, 1500);
 
             } catch (error) {
-                errorMsg.textContent = error.message;
+                console.error('Registration error:', error);
+                errorMsg.textContent = error.message || 'Registration failed. Please try again.';
                 errorMsg.style.display = 'block';
-                successMsg.style.display = 'none';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Account';
             }
         });
     </script>

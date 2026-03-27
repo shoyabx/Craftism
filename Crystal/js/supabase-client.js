@@ -2,7 +2,7 @@
 // Using CDN import via HTML script tag
 
 const SUPABASE_URL = 'https://bvioymmybgkmqzjxnltz.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_vkSIeR911XGcxt98oaTo9A_wg8SyrO-';
+const SUPABASE_KEY = 'sb_publishable_UGAMF3ae5nGhhme_gq85pw_b27qgacp';
 
 // Check if supabase global exists (it will be loaded in HTML via CDN)
 let supabaseClient = null;
