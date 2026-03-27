@@ -1,36 +1,44 @@
 // Supabase Client Initialization
-// Using CDN import via HTML script tag
 
 const SUPABASE_URL = 'https://oesyuyxahvudrdjkeyyh.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_UGAMF3ae5nGhhme_gq85pw_b27qgacp';
 
-// Check if supabase global exists (it will be loaded in HTML via CDN)
 let supabaseClient = null;
 
+/**
+ * Initialize the Supabase client.
+ * Safe to call multiple times — will not re-create if already initialized.
+ */
 function initSupabase() {
+    if (supabaseClient) return true; // already initialized
     if (typeof supabase !== 'undefined') {
-        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        console.log('Supabase initialized');
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+            auth: {
+                persistSession: true,       // save session to localStorage
+                autoRefreshToken: true,     // refresh token automatically
+                detectSessionInUrl: true    // handle OAuth redirects
+            }
+        });
+        console.log('[Supabase] Client initialized');
         return true;
-    } else {
-        console.warn('Supabase SDK not loaded yet.');
-        return false;
     }
+    console.warn('[Supabase] SDK not loaded yet');
+    return false;
 }
 
 /**
- * Wait for Supabase SDK to be available and initialize it
- * @param {number} maxRetries - Maximum number of retry attempts
- * @param {number} delay - Delay between retries in ms
- * @returns {Promise<boolean>} - True if initialized successfully
+ * Wait up to 1s for the Supabase SDK CDN script to load, then initialize.
  */
-async function waitForSupabase(maxRetries = 10, delay = 100) {
+async function waitForSupabase(maxRetries = 20, delay = 50) {
     for (let i = 0; i < maxRetries; i++) {
-        if (initSupabase()) {
-            return true;
-        }
+        if (initSupabase()) return true;
         await new Promise(resolve => setTimeout(resolve, delay));
     }
-    console.error('Failed to initialize Supabase after', maxRetries, 'attempts');
+    console.error('[Supabase] SDK failed to load after retries');
     return false;
 }
+
+// ─── AUTO-INITIALIZE immediately when this script runs ───────────────────────
+// The Supabase CDN <script> is in <head> (blocking), so `supabase` global
+// should already exist by the time this file runs at the bottom of <body>.
+initSupabase();

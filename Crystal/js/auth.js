@@ -176,13 +176,19 @@ async function requireAuth() {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Always update navbar — even if Supabase fails, show Login
+    // supabaseClient is already initialized by supabase-client.js
+    // If for any reason it's not (e.g. CDN failed), try once more
+    if (!supabaseClient) {
+        await waitForSupabase();
+    }
+
+    // Update navbar immediately
     await updateNavbar();
 
-    // Then try to set up live auth state listener
-    if (supabaseClient || await waitForSupabase()) {
+    // Keep navbar in sync with live auth state changes
+    if (supabaseClient) {
         supabaseClient.auth.onAuthStateChange((event, session) => {
-            console.log('Auth state changed:', event);
+            console.log('[Auth] State changed:', event);
             updateNavbar();
         });
     }
