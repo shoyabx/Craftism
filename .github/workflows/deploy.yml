@@ -23,13 +23,13 @@ jobs:
 
           ssh shoyab_mail@136.113.210.199 << 'EOF'
             # Pull latest changes if using a git repository directly
-            if [ -d "/home/shoyab_mail/craftism/.git" ]; then
-              cd /home/shoyab_mail/craftism
+            if [ -d "/home/shoyab_mail/craftism/Craftism/.git" ]; then
+              cd /home/shoyab_mail/craftism/Craftism
               git pull origin main
               
               # Assuming docker-compose is being used as per the README
               docker compose restart web
             else
-              echo "Repository not found at /home/shoyab_mail/craftism"
+              echo "Repository not found at /home/shoyab_mail/craftism/Craftism"
             fi
           EOF
