@@ -22,5 +22,14 @@ jobs:
           ssh-keyscan -H 136.113.210.199 >> ~/.ssh/known_hosts
 
           ssh shoyab_mail@136.113.210.199 << 'EOF'
-            echo "CI/CD CONNECTED AT $(date)" > /tmp/cicd_PROOF.txt
+            # Pull latest changes if using a git repository directly
+            if [ -d "/home/shoyab_mail/craftism/.git" ]; then
+              cd /home/shoyab_mail/craftism
+              git pull origin main
+              
+              # Assuming docker-compose is being used as per the README
+              docker compose restart web
+            else
+              echo "Repository not found at /home/shoyab_mail/craftism"
+            fi
           EOF
